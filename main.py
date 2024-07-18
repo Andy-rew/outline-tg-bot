@@ -1,11 +1,10 @@
-import logging
 
-from telegram import Update, BotCommandScopeDefault, BotCommand
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    ContextTypes,
-)
+from telegram import Update, BotCommand
+from telegram.constants import ParseMode
+from telebot.async_telebot import AsyncTeleBot
+from telebot import types
+from telebot.types import BotCommand
+
 from outline_vpn.outline_vpn import OutlineVPN
 import pandas as pd
 from dotenv import dotenv_values
@@ -13,23 +12,20 @@ import asyncio
 
 config = dotenv_values(".env")
 
+bot = AsyncTeleBot(config['BOT_TOKEN'])
+
 client = OutlineVPN(api_url=config['API_URL'],
-                    cert_sha256=config['CERT_SHA256'],)
+                    cert_sha256=config['CERT_SHA256'], )
 
-# Enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-# set higher logging level for httpx to avoid all GET and POST requests being logged
-logging.getLogger("httpx").setLevel(logging.WARNING)
-
-logger = logging.getLogger(__name__)
+admins = config['ADMINS'].split(',')
 
 
 def wrap_as_markdown(text):
     return '```\n' + text + '\n```'
 
-async def metrics_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+@bot.message_handler(commands=['metrics'])
+async def metrics_callback(message: types.Message) -> None:
     headers = ['id', 'name', 'amount(Gb)']
     client_data = pd.DataFrame(columns=headers)
 
@@ -43,64 +39,76 @@ async def metrics_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     str_res = client_data.to_markdown(index=False)
 
-    await update.message.reply_markdown_v2(wrap_as_markdown(str_res))
+    await bot.reply_to(message, wrap_as_markdown(str_res), parse_mode=ParseMode.MARKDOWN)
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        "Use /metrics to show VPN data info"
-    )
 
-async def new_key_callback(update, context):
-    new_user = " ".join(context.args)
+@bot.message_handler(commands=['help'])
+async def help_command(message: types.Message) -> None:
+    await bot.reply_to(message, "God will help you")
+
+
+@bot.message_handler(commands=['new_key'])
+async def new_key_callback(message: types.Message) -> None:
+
+    if message.from_user.username not in admins:
+        await bot.reply_to(message, "Only admins can create keys")
+        return
+
+    try:
+        new_user = message.text.split()[1]
+    except Exception:
+        await bot.reply_to(message, "Key name is not valid")
 
     key = client.create_key(
         name=new_user,
     )
 
-    await update.message.reply_markdown_v2(
-       'Success creation \n' +
-       'User: ' + key.name + '\n' +
-       wrap_as_markdown(key.access_url)
-    )
+    await bot.reply_to(message,
+                       'Success creation \n' +
+                       'User: ' + key.name + '\n' +
+                       wrap_as_markdown(key.access_url),
+                       parse_mode=ParseMode.MARKDOWN
+                       )
 
-async def delete_key_callback(update, context):
-    delete_id = context.args[0]
+
+@bot.message_handler(commands=['delete_key'])
+async def delete_key_callback(message: types.Message) -> None:
+
+    if message.from_user.username not in admins:
+        await bot.reply_to(message, "Only admins can delete keys")
+        return
+
+    try:
+        delete_id = message.text.split()[1]
+    except Exception:
+        await bot.reply_to(message, "Key id is not valid")
 
     delete_status_ok = client.delete_key(delete_id)
 
     if delete_status_ok:
-        await update.message.reply_text('Success deletion')
+        await bot.reply_to(message, 'Success deletion')
     else:
-        await update.message.reply_text('Error, deletion failed')
-
-async def start_callback(update, context):
-    await update.message.reply_text('Welcome to Outline, body!')
+        await bot.reply_to(message, 'Error, deletion failed')
 
 
-def main():
-
-    application = (
-        Application.builder()
-        .token(config['BOT_TOKEN'])
-        .build()
-    )
-
-    commands = [BotCommand(command='start', description='Старт'),
-                BotCommand(command='metrics', description='Получить статистику'),
-                BotCommand(command='new_key', description='Добавить ключ'),
-                BotCommand(command='delete_key', description='Удалить ключ'),
-                BotCommand(command='help', description='Помощь')]
-
-   # await application.bot.set_my_commands(commands, BotCommandScopeDefault())
-
-    application.add_handler(CommandHandler("start", start_callback))
-    application.add_handler(CommandHandler("metrics", metrics_callback))
-    application.add_handler(CommandHandler("new_key", new_key_callback))
-    application.add_handler(CommandHandler("delete_key", delete_key_callback))
-    application.add_handler(CommandHandler("help", help_command))
-
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+@bot.message_handler(commands=['start'])
+async def start_callback(message: types.Message) -> None:
+    await bot.reply_to(message, 'Welcome to Outline, body!')
 
 
-if __name__ == "__main__":
-    main()
+async def main():
+    commands = [
+        BotCommand(command='start', description='Старт'),
+        BotCommand(command='metrics', description='Получить статистику'),
+        BotCommand(command='new_key', description='Добавить ключ'),
+        BotCommand(command='delete_key', description='Удалить ключ'),
+        BotCommand(command='help', description='Помощь')
+    ]
+
+    await bot.set_my_commands(commands=commands)
+
+    await bot.polling(allowed_updates=Update.ALL_TYPES)
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
