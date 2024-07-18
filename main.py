@@ -32,7 +32,7 @@ async def metrics_callback(message: types.Message) -> None:
     for key in client.get_keys():
         key.used_bytes = 0 if key.used_bytes is None else key.used_bytes
 
-        used_gbytes = (key.used_bytes / 1024 / 1024 / 1024).__round__(2)
+        used_gbytes = round(key.used_bytes / 1024 / 1024 / 1024, 2)
         client_data.loc[len(client_data.index)] = [key.key_id, key.name, used_gbytes]
 
     client_data = client_data.sort_values(by='amount(Gb)', ascending=False, ignore_index=True)
