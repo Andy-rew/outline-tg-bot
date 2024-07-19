@@ -94,10 +94,10 @@ async def callback_query(call: types.CallbackQuery) -> None:
 
     delete_status_ok = client.delete_key(call.data)
     if delete_status_ok:
-        await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="Успешно удалено")
+        await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=f'Success deletion\nID: {call.data}')
         await bot.answer_callback_query(call.id, "Готово")
     else:
-        await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="Удаление провалилось")
+        await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="Failed deletion")
         await bot.answer_callback_query(call.id, "Провал")
 
 
