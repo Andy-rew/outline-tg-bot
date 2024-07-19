@@ -2,10 +2,6 @@ name: Docker Hub
 run-name: Docker Hub
 
 on:
-  workflow_run:
-    workflows: ["Flake8 Lint"]
-    types:
-      - completed
 
 env:
   REGISTRY: docker.io
