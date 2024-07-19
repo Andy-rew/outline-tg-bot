@@ -18,7 +18,7 @@ admins = config['ADMINS'].split(',')
 
 
 def wrap_as_markdown(text: str) -> str:
-    return '```\n' + text + '\n```'
+    return f'```\n{text}\n```'
 
 
 @bot.message_handler(commands=['metrics'])
@@ -45,15 +45,18 @@ async def help_command(message: types.Message) -> None:
     await bot.reply_to(message, "God will help you")
 
 
-@bot.message_handler(commands=['new_key'])
-async def new_key_callback(message: types.Message) -> None:
+async def check_admin(message: types.Message) -> bool:
     if message.from_user.username not in admins:
-        await bot.reply_to(message, "Only admins can create keys")
-        return
+        await bot.reply_to(message, "Permission denied")
+        return False
+    return True
 
+
+@bot.message_handler(func=check_admin, commands=['new_key'])
+async def new_key_callback(message: types.Message) -> None:
     try:
         new_user = message.text.split()[1]
-    except Exception:
+    except IndexError:
         await bot.reply_to(message, "Key name is not valid")
         return
 
@@ -62,22 +65,16 @@ async def new_key_callback(message: types.Message) -> None:
     )
 
     await bot.reply_to(message,
-                       'Success creation \n' +
-                       'User: ' + key.name + '\n' +
-                       wrap_as_markdown(key.access_url),
+                       f'Success creation\nUser: {key.name}\n{wrap_as_markdown(key.access_url)}',
                        parse_mode='Markdown',
                        )
 
 
-@bot.message_handler(commands=['delete_key'])
+@bot.message_handler(func=check_admin, commands=['delete_key'])
 async def delete_key_callback(message: types.Message) -> None:
-    if message.from_user.username not in admins:
-        await bot.reply_to(message, "Only admins can delete keys")
-        return
-
     try:
         delete_id = message.text.split()[1]
-    except Exception:
+    except IndexError:
         await bot.reply_to(message, "Key id is not valid")
         return
 
