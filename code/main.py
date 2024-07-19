@@ -65,25 +65,40 @@ async def new_key_callback(message: types.Message) -> None:
     )
 
     await bot.reply_to(message,
-                       f'Success creation\nUser: {key.name}\n{wrap_as_markdown(key.access_url)}',
+                       f'Success creation\nID: {key.key_id}\nName: {key.name}\n{wrap_as_markdown(key.access_url)}',
                        parse_mode='Markdown',
                        )
 
 
 @bot.message_handler(func=check_admin, commands=['delete_key'])
-async def delete_key_callback(message: types.Message) -> None:
-    try:
-        delete_id = message.text.split()[1]
-    except IndexError:
-        await bot.reply_to(message, "Key id is not valid")
-        return
+async def delete_key_buttons(message: types.Message) -> None:
+    markup = types.InlineKeyboardMarkup(row_width=1)
 
-    delete_status_ok = client.delete_key(delete_id)
+    keys = client.get_keys()
 
+    buttons = []
+    for key in keys:
+        button = types.InlineKeyboardButton(f"ID: {key.key_id}, Name: {key.name}", callback_data=key.key_id)
+        buttons.append(button)
+
+    markup.add(*buttons)
+
+    await bot.send_message(message.chat.id, "Выберите ключ для удаления", reply_markup=markup)
+
+
+@bot.callback_query_handler(func=lambda call: True)
+async def callback_query(call: types.CallbackQuery) -> None:
+    message = call.message
+    chat_id = message.chat.id
+    message_id = message.message_id
+
+    delete_status_ok = client.delete_key(call.data)
     if delete_status_ok:
-        await bot.reply_to(message, 'Success deletion')
+        await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="Успешно удалено")
+        await bot.answer_callback_query(call.id, "Готово")
     else:
-        await bot.reply_to(message, 'Error, deletion failed')
+        await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="Удаление провалилось")
+        await bot.answer_callback_query(call.id, "Провал")
 
 
 @bot.message_handler(commands=['start'])
