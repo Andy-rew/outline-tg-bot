@@ -83,7 +83,7 @@ async def delete_key_buttons(message: types.Message) -> None:
 
     markup.add(*buttons)
 
-    await bot.send_message(message.chat.id, "Выберите ключ для удаления", reply_markup=markup)
+    await bot.send_message(message.chat.id, "Choose key for deletion", reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -95,10 +95,10 @@ async def callback_query(call: types.CallbackQuery) -> None:
     delete_status_ok = client.delete_key(call.data)
     if delete_status_ok:
         await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=f'Success deletion\nID: {call.data}')
-        await bot.answer_callback_query(call.id, "Готово")
+        await bot.answer_callback_query(call.id, "Done")
     else:
         await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="Failed deletion")
-        await bot.answer_callback_query(call.id, "Провал")
+        await bot.answer_callback_query(call.id, "Failed")
 
 
 @bot.message_handler(commands=['start'])
@@ -108,11 +108,11 @@ async def start_callback(message: types.Message) -> None:
 
 async def main():
     commands = [
-        BotCommand(command='start', description='Старт'),
-        BotCommand(command='metrics', description='Получить статистику'),
-        BotCommand(command='new_key', description='Добавить ключ'),
-        BotCommand(command='delete_key', description='Удалить ключ'),
-        BotCommand(command='help', description='Помощь')
+        BotCommand(command='start', description='Start'),
+        BotCommand(command='metrics', description='Show statistics'),
+        BotCommand(command='new_key', description='Add new key'),
+        BotCommand(command='delete_key', description='Delete old key'),
+        BotCommand(command='help', description='Get help')
     ]
 
     await bot.set_my_commands(commands=commands)
