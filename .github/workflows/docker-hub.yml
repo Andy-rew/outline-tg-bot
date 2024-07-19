@@ -2,7 +2,8 @@ name: Docker Hub
 run-name: Docker Hub
 
 on:
-
+  push:
+    branches: [ "master" ]
 env:
   REGISTRY: docker.io
   IMAGE_NAME: ${{ github.repository }}
