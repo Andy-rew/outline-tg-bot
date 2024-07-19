@@ -1,14 +1,11 @@
+import asyncio
 
-from telegram import Update, BotCommand
-from telegram.constants import ParseMode
-from telebot.async_telebot import AsyncTeleBot
-from telebot import types
-from telebot.types import BotCommand
-
-from outline_vpn.outline_vpn import OutlineVPN
 import pandas as pd
 from dotenv import dotenv_values
-import asyncio
+from outline_vpn.outline_vpn import OutlineVPN
+from telebot import types
+from telebot.async_telebot import AsyncTeleBot
+from telebot.types import BotCommand
 
 config = dotenv_values(".env")
 
@@ -20,26 +17,27 @@ client = OutlineVPN(api_url=config['API_URL'],
 admins = config['ADMINS'].split(',')
 
 
-def wrap_as_markdown(text):
+def wrap_as_markdown(text: str) -> str:
     return '```\n' + text + '\n```'
 
 
 @bot.message_handler(commands=['metrics'])
 async def metrics_callback(message: types.Message) -> None:
-    headers = ['id', 'name', 'amount(Gb)']
-    client_data = pd.DataFrame(columns=headers)
+    data = {'id': [], 'name': [], 'amount(Gb)': []}
 
     for key in client.get_keys():
         key.used_bytes = 0 if key.used_bytes is None else key.used_bytes
 
         used_gbytes = round(key.used_bytes / 1024 / 1024 / 1024, 2)
-        client_data.loc[len(client_data.index)] = [key.key_id, key.name, used_gbytes]
+        data['id'].append(key.key_id)
+        data['name'].append(key.name)
+        data['amount(Gb)'].append(used_gbytes)
 
-    client_data = client_data.sort_values(by='amount(Gb)', ascending=False, ignore_index=True)
+    client_data = pd.DataFrame(data=data).sort_values(by='amount(Gb)', ascending=False, ignore_index=True)
 
     str_res = client_data.to_markdown(index=False)
 
-    await bot.reply_to(message, wrap_as_markdown(str_res), parse_mode=ParseMode.MARKDOWN)
+    await bot.reply_to(message, wrap_as_markdown(str_res), parse_mode='Markdown')
 
 
 @bot.message_handler(commands=['help'])
@@ -49,7 +47,6 @@ async def help_command(message: types.Message) -> None:
 
 @bot.message_handler(commands=['new_key'])
 async def new_key_callback(message: types.Message) -> None:
-
     if message.from_user.username not in admins:
         await bot.reply_to(message, "Only admins can create keys")
         return
@@ -58,6 +55,7 @@ async def new_key_callback(message: types.Message) -> None:
         new_user = message.text.split()[1]
     except Exception:
         await bot.reply_to(message, "Key name is not valid")
+        return
 
     key = client.create_key(
         name=new_user,
@@ -67,13 +65,12 @@ async def new_key_callback(message: types.Message) -> None:
                        'Success creation \n' +
                        'User: ' + key.name + '\n' +
                        wrap_as_markdown(key.access_url),
-                       parse_mode=ParseMode.MARKDOWN
+                       parse_mode='Markdown',
                        )
 
 
 @bot.message_handler(commands=['delete_key'])
 async def delete_key_callback(message: types.Message) -> None:
-
     if message.from_user.username not in admins:
         await bot.reply_to(message, "Only admins can delete keys")
         return
@@ -82,6 +79,7 @@ async def delete_key_callback(message: types.Message) -> None:
         delete_id = message.text.split()[1]
     except Exception:
         await bot.reply_to(message, "Key id is not valid")
+        return
 
     delete_status_ok = client.delete_key(delete_id)
 
@@ -107,7 +105,7 @@ async def main():
 
     await bot.set_my_commands(commands=commands)
 
-    await bot.polling(allowed_updates=Update.ALL_TYPES)
+    await bot.polling()
 
 
 if __name__ == '__main__':
