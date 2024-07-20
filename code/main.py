@@ -39,7 +39,7 @@ async def metrics_callback(message: types.Message) -> None:
 
     client_data = pd.DataFrame(data=data).sort_values(by='amount(Gb)', ascending=False, ignore_index=True)
 
-    str_res = client_data.ещ(index=False)
+    str_res = client_data.to_markdown(index=False)
 
     await bot.reply_to(message, wrap_as_markdown(str_res), parse_mode='Markdown')
 
