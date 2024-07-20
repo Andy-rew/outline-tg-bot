@@ -8,26 +8,26 @@ then
 fi
 
 # checks if container exist
-if [ "$(docker ps -a -q -f name=$1)" ]
+if [ "$(docker ps -a -q -f name=outline-tg-bot)" ]
 then
-    echo "An existing container with the name $1 was found!"
+    echo "An existing container with the name outline-tg-bot was found!"
 
     # checks if container is running and stop it if it is
-    if [ "$(docker ps -aq -f status=running -f name=$1)" ]
+    if [ "$(docker ps -aq -f status=running -f name=outline-tg-bot)" ]
     then
         echo "Stopping container..."
-        docker stop $1
+        docker stop outline-tg-bot
 	echo "Container stopped."
     fi
 
     # removes stopped container
     echo "Removing stopped container..."
-    docker rm -f $1
+    docker rm -f outline-tg-bot
     echo "Container removed."
 fi
 
 # pull the latest image
-docker pull andy-rew/outline-tg-bot:master
+docker pull 114ndy/outline-tg-bot:$1
 
 # run new docker container
-docker run -d --restart always --name $1 --env-file ./.env andy-rew/outline-tg-bot:master
+docker run -d --restart always --name outline-tg-bot --env-file ./.env 114ndy/outline-tg-bot:$1

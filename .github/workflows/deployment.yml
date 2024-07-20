@@ -19,4 +19,4 @@ jobs:
         host: ${{ secrets.DEPLOYMENT_HOST }}
         username: ${{ secrets.DEPLOYMENT_USERNAME }}
         password: ${{ secrets.DEPLOYMENT_PASSWORD }}
-        script: cd outline-tg-bot/ && ./scripts/deploy.sh outline-tg-bot
+        script: cd outline-tg-bot/ && ./scripts/deploy.sh ${{ github.event.release.tag_name }}
