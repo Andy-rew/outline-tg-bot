@@ -9,7 +9,6 @@ RUN mkdir ./images
 
 # install app-specific dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install -U python-dotenv
 
 # app command
 CMD ["python", "-u", "./code/main.py"]

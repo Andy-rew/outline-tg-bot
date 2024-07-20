@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 import pandas as pd
 from dotenv import dotenv_values
@@ -6,19 +7,18 @@ from outline_vpn.outline_vpn import OutlineVPN
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand
-import os
 
-config = dotenv_values(".env")
+config = dotenv_values("../.env")
 
 if not config:
     config = os.environ
 
-bot = AsyncTeleBot(config['BOT_TOKEN'])
+bot = AsyncTeleBot(config.get('BOT_TOKEN'))
 
-client = OutlineVPN(api_url=config['API_URL'],
-                    cert_sha256=config['CERT_SHA256'], )
+client = OutlineVPN(api_url=config.get('API_URL'),
+                    cert_sha256=config.get('CERT_SHA256'), )
 
-admins = config['ADMINS'].split(',')
+admins = config.get('ADMINS').split(',')
 
 
 def wrap_as_markdown(text: str) -> str:
@@ -39,7 +39,7 @@ async def metrics_callback(message: types.Message) -> None:
 
     client_data = pd.DataFrame(data=data).sort_values(by='amount(Gb)', ascending=False, ignore_index=True)
 
-    str_res = client_data.to_markdown(index=False)
+    str_res = client_data.ещ(index=False)
 
     await bot.reply_to(message, wrap_as_markdown(str_res), parse_mode='Markdown')
 
@@ -50,7 +50,7 @@ async def help_command(message: types.Message) -> None:
 
 
 async def check_admin(message: types.Message) -> bool:
-    if message.from_user.id not in admins:
+    if str(message.from_user.id) not in admins:
         await bot.reply_to(message, "Permission denied")
         return False
     return True
