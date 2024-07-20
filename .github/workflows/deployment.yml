@@ -1,5 +1,5 @@
-name: Deploy Bot
-run-name: Deploy Bot
+name: Deploy to self host
+run-name: Deploy to self host
 
 on:
   release:
