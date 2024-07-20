@@ -2,8 +2,9 @@ name: Docker Hub
 run-name: Docker Hub
 
 on:
-  push:
-    branches: [ "master" ]
+  release:
+    types:
+      - published
 env:
   REGISTRY: docker.io
   IMAGE_NAME: ${{ github.repository }}
@@ -34,4 +35,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/outline-tg-bot:0.0.1
+          tags: ${{ secrets.DOCKER_USERNAME }}/outline-tg-bot:${{ github.event.release.tag_name }}
