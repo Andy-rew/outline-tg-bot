@@ -46,7 +46,7 @@ async def help_command(message: types.Message) -> None:
 
 
 async def check_admin(message: types.Message) -> bool:
-    if message.from_user.username not in admins:
+    if message.from_user.id not in admins:
         await bot.reply_to(message, "Permission denied")
         return False
     return True
