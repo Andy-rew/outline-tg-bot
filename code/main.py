@@ -6,8 +6,12 @@ from outline_vpn.outline_vpn import OutlineVPN
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand
+import os
 
 config = dotenv_values(".env")
+
+if not config:
+    config = os.environ
 
 bot = AsyncTeleBot(config['BOT_TOKEN'])
 
