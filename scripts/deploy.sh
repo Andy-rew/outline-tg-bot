@@ -30,4 +30,4 @@ fi
 docker pull 114ndy/outline-tg-bot:$1
 
 # run new docker container
-docker run -d --restart always --name outline-tg-bot --env-file ./.env 114ndy/outline-tg-bot:$1
+docker run -d --restart always --name outline-tg-bot --env-file ./../.env 114ndy/outline-tg-bot:$1
