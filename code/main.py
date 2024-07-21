@@ -90,11 +90,11 @@ async def delete_key_buttons(message: types.Message) -> None:
             f"ID: {key.key_id}, Name: {key.name}",
             callback_data=key.key_id)
         buttons.append(button)
-    markup.add(*buttons)
 
     cancel_button = types.InlineKeyboardButton(f"Cancel",
-                                               callback_data=None)
-    markup.add(cancel_button)
+                                               callback_data=-1)
+    buttons.append(cancel_button)
+    markup.add(*buttons)
 
     await bot.send_message(message.chat.id, "Choose key for deletion",
                            reply_markup=markup)
@@ -106,7 +106,7 @@ async def callback_query(call: types.CallbackQuery) -> None:
     chat_id = message.chat.id
     message_id = message.message_id
 
-    if call.data is None:
+    if call.data == '-1':
         await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
                                     text=f'Canceled')
         await bot.answer_callback_query(call.id, "Canceled")
