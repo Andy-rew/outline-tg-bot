@@ -1,4 +1,4 @@
-# Telegram bot for managing OutlineVPN server.
+# Telegram bot for managing OutlineVPN server
 
 ## Contents
 
