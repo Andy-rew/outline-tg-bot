@@ -8,7 +8,7 @@ from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand
 
-from utils import wrap_as_markdown, join_text
+from utils import _wrap_as_markdown, _join_text
 
 config = dotenv_values("../.env")
 
@@ -23,8 +23,23 @@ client = OutlineVPN(api_url=config.get('API_URL'),
 admins = config.get('ADMINS').split(',')
 
 
+@bot.message_handler(commands=['start'])
+async def start_handler(message: types.Message) -> None:
+    """
+    Show greeting to user
+    :param message: command
+    :return: None
+    """
+    await bot.reply_to(message, 'Welcome to Outline, body!')
+
+
 @bot.message_handler(commands=['metrics'])
-async def metrics_callback(message: types.Message) -> None:
+async def metrics_handler(message: types.Message) -> None:
+    """
+    Form statistics DataFrame and send it to user
+    :param message: command
+    :return: None
+    """
     data = {'ID': [], 'Name': [], 'GB': []}
 
     for key in client.get_keys():
@@ -41,16 +56,16 @@ async def metrics_callback(message: types.Message) -> None:
 
     str_res = client_data.to_markdown(index=False)
 
-    await bot.reply_to(message, wrap_as_markdown(str_res),
+    await bot.reply_to(message, _wrap_as_markdown(str_res),
                        parse_mode='Markdown')
 
 
-@bot.message_handler(commands=['help'])
-async def help_command(message: types.Message) -> None:
-    await bot.reply_to(message, "God will help you")
-
-
 async def check_admin(message: types.Message) -> bool:
+    """
+    Check if command was sent by admin or not
+    :param message: command
+    :return: True if user is admin, False otherwise
+    """
     if str(message.from_user.id) not in admins:
         await bot.reply_to(message, "Permission denied")
         return False
@@ -58,7 +73,12 @@ async def check_admin(message: types.Message) -> bool:
 
 
 @bot.message_handler(func=check_admin, commands=['new_key'])
-async def new_key_callback(message: types.Message) -> None:
+async def new_key_handler(message: types.Message) -> None:
+    """
+    Try to create a new key in outline
+    :param message: command and new key name
+    :return: None
+    """
     try:
         new_user = message.text.split()[1]
     except IndexError:
@@ -69,8 +89,8 @@ async def new_key_callback(message: types.Message) -> None:
         name=new_user,
     )
 
-    text = join_text('Success creation', f'ID: {key.key_id}',
-                     f'Name: {key.name}', wrap_as_markdown(key.access_url))
+    text = _join_text('Success creation', f'ID: {key.key_id}',
+                      f'Name: {key.name}', _wrap_as_markdown(key.access_url))
 
     await bot.send_message(message.from_user.id, text, parse_mode='Markdown')
     if message.chat.type != "private":
@@ -78,7 +98,12 @@ async def new_key_callback(message: types.Message) -> None:
 
 
 @bot.message_handler(func=check_admin, commands=['delete_key'])
-async def delete_key_buttons(message: types.Message) -> None:
+async def delete_key_handler(message: types.Message) -> None:
+    """
+    Try to delete old key from list
+    :param message: command
+    :return: None
+    """
     markup = types.InlineKeyboardMarkup(row_width=1)
 
     keys = client.get_keys()
@@ -100,7 +125,12 @@ async def delete_key_buttons(message: types.Message) -> None:
 
 
 @bot.callback_query_handler(func=lambda call: True)
-async def callback_query(call: types.CallbackQuery) -> None:
+async def callback_query_handler(call: types.CallbackQuery) -> None:
+    """
+    Handle pressing button for deleting key
+    :param call: Pressed button
+    :return: None
+    """
     message = call.message
     chat_id = message.chat.id
     message_id = message.message_id
@@ -122,12 +152,21 @@ async def callback_query(call: types.CallbackQuery) -> None:
         await bot.answer_callback_query(call.id, "Failed")
 
 
-@bot.message_handler(commands=['start'])
-async def start_callback(message: types.Message) -> None:
-    await bot.reply_to(message, 'Welcome to Outline, body!')
+@bot.message_handler(commands=['help'])
+async def help_handler(message: types.Message) -> None:
+    """
+    Show help string
+    :param message: command
+    :return: None
+    """
+    await bot.reply_to(message, "Use commands to manage OutlineVPN server")
 
 
-async def main():
+async def main() -> None:
+    """
+    Make commands and start bot
+    :return: None
+    """
     commands = [
         BotCommand(command='start', description='Start'),
         BotCommand(command='metrics', description='Show statistics'),
@@ -138,7 +177,7 @@ async def main():
 
     await bot.set_my_commands(commands=commands)
 
-    await bot.polling()
+    await bot.infinity_polling()
 
 
 if __name__ == '__main__':
