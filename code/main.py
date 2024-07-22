@@ -3,7 +3,7 @@ import os
 
 import pandas as pd
 from dotenv import dotenv_values
-from outline_vpn.outline_vpn import OutlineVPN
+from outline_vpn.outline_vpn import OutlineVPN, OutlineServerErrorException
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand
@@ -87,6 +87,8 @@ async def new_key_handler(message: types.Message) -> None:
     """
     try:
         new_user = message.text.split()[1]
+        if '_' in new_user:
+            raise IndexError
     except IndexError:
         await bot.reply_to(message, "Key name is not valid")
         return
@@ -96,6 +98,33 @@ async def new_key_handler(message: types.Message) -> None:
     )
 
     text = _join_text('Success creation', f'ID: {key.key_id}',
+                      f'Name: {key.name}', _wrap_as_markdown(key.access_url))
+
+    await bot.send_message(message.from_user.id, text, parse_mode='Markdown')
+    if message.chat.type != "private":
+        await bot.reply_to(message, "Credentials sent to your DM.")
+
+
+@bot.message_handler(func=check_admin, commands=['get_key'])
+async def get_key_handler(message: types.Message) -> None:
+    """
+    Try to get credentials for existing key in OutlineVPN server
+    :param message: command and new key name
+    :return: None
+    """
+    try:
+        key_id = message.text.split()[1]
+    except IndexError:
+        await bot.reply_to(message, "Key ID is not valid")
+        return
+
+    try:
+        key = client.get_key(key_id=key_id)
+    except OutlineServerErrorException:
+        await bot.reply_to(message, "Unable to get key")
+        return
+
+    text = _join_text('Got key', f'ID: {key.key_id}',
                       f'Name: {key.name}', _wrap_as_markdown(key.access_url))
 
     await bot.send_message(message.from_user.id, text, parse_mode='Markdown')
@@ -190,6 +219,8 @@ async def main() -> None:
         BotCommand(command='start', description='Start'),
         BotCommand(command='metrics', description='Show statistics'),
         BotCommand(command='new_key', description='Add new key'),
+        BotCommand(command='get_key',
+                   description='Get credentials for existing key'),
         BotCommand(command='delete_key', description='Delete old key'),
         BotCommand(command='help', description='Get help')
     ]
