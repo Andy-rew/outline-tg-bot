@@ -72,10 +72,9 @@ async def new_key_callback(message: types.Message) -> None:
     text = join_text('Success creation', f'ID: {key.key_id}',
                      f'Name: {key.name}', wrap_as_markdown(key.access_url))
 
-    await bot.reply_to(message,
-                       text,
-                       parse_mode='Markdown',
-                       )
+    await bot.send_message(message.from_user.id, text, parse_mode='Markdown')
+    if message.chat.type != "private":
+        await bot.reply_to(message, "Credentials sent to your DM.")
 
 
 @bot.message_handler(func=check_admin, commands=['delete_key'])
