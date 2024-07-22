@@ -9,7 +9,6 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand
 
 from mockService import OutlineMockService
-
 from utils import _wrap_as_markdown, _join_text
 
 config = dotenv_values("../.env")
@@ -19,9 +18,7 @@ if not config:
 
 bot = AsyncTeleBot(config.get('BOT_TOKEN'))
 
-
 is_mock_outline = config.get('MOCK_OUTLINE') == 'true'
-
 
 if is_mock_outline:
     client = OutlineMockService()
@@ -29,8 +26,8 @@ else:
     client = OutlineVPN(api_url=config.get('API_URL'),
                         cert_sha256=config.get('CERT_SHA256'), )
 
-
 admins = config.get('ADMINS').split(',')
+
 
 @bot.message_handler(commands=['start'])
 async def start_handler(message: types.Message) -> None:
@@ -124,16 +121,28 @@ async def delete_key_handler(message: types.Message) -> None:
             callback_data=key.key_id)
         buttons.append(button)
 
-    # cancel_button = types.InlineKeyboardButton(f"Cancel",
-    #                                            callback_data=-1)
-    #buttons.append(cancel_button)
+    cancel_button = types.InlineKeyboardButton(f"Cancel",
+                                               callback_data='-1')
+    buttons.append(cancel_button)
     markup.add(*buttons)
 
     await bot.send_message(message.chat.id, "Choose key for deletion",
                            reply_markup=markup)
 
 
-@bot.callback_query_handler(func=lambda call: True)
+async def check_admin_callback(call: types.CallbackQuery) -> bool:
+    """
+    Check if callback was sent by admin or not
+    :param call: callback
+    :return: True if user is admin, False otherwise
+    """
+    if str(call.from_user.id) not in admins:
+        await bot.answer_callback_query(call.id, "Permission denied")
+        return False
+    return True
+
+
+@bot.callback_query_handler(func=check_admin_callback)
 async def callback_query_handler(call: types.CallbackQuery) -> None:
     """
     Handle pressing button for deleting key
