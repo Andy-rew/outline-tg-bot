@@ -75,7 +75,7 @@ async def check_admin(message: types.Message) -> bool:
 @bot.message_handler(func=check_admin, commands=['new_key'])
 async def new_key_handler(message: types.Message) -> None:
     """
-    Try to create a new key in outline
+    Try to create a new key in OutlineVPN server
     :param message: command and new key name
     :return: None
     """
@@ -100,7 +100,7 @@ async def new_key_handler(message: types.Message) -> None:
 @bot.message_handler(func=check_admin, commands=['delete_key'])
 async def delete_key_handler(message: types.Message) -> None:
     """
-    Try to delete old key from list
+    Try to delete old key from OutlineVPN server
     :param message: command
     :return: None
     """
