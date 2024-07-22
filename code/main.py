@@ -8,6 +8,8 @@ from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand
 
+from mockService import OutlineMockService
+
 from utils import _wrap_as_markdown, _join_text
 
 config = dotenv_values("../.env")
@@ -17,11 +19,18 @@ if not config:
 
 bot = AsyncTeleBot(config.get('BOT_TOKEN'))
 
-client = OutlineVPN(api_url=config.get('API_URL'),
-                    cert_sha256=config.get('CERT_SHA256'), )
+
+is_mock_outline = config.get('MOCK_OUTLINE') == 'true'
+
+
+if is_mock_outline:
+    client = OutlineMockService()
+else:
+    client = OutlineVPN(api_url=config.get('API_URL'),
+                        cert_sha256=config.get('CERT_SHA256'), )
+
 
 admins = config.get('ADMINS').split(',')
-
 
 @bot.message_handler(commands=['start'])
 async def start_handler(message: types.Message) -> None:
@@ -115,9 +124,9 @@ async def delete_key_handler(message: types.Message) -> None:
             callback_data=key.key_id)
         buttons.append(button)
 
-    cancel_button = types.InlineKeyboardButton(f"Cancel",
-                                               callback_data=-1)
-    buttons.append(cancel_button)
+    # cancel_button = types.InlineKeyboardButton(f"Cancel",
+    #                                            callback_data=-1)
+    #buttons.append(cancel_button)
     markup.add(*buttons)
 
     await bot.send_message(message.chat.id, "Choose key for deletion",
@@ -142,6 +151,7 @@ async def callback_query_handler(call: types.CallbackQuery) -> None:
         return
 
     delete_status_ok = client.delete_key(call.data)
+
     if delete_status_ok:
         await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
                                     text=f'Success deletion\nID: {call.data}')
