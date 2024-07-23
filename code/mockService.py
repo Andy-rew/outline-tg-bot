@@ -7,11 +7,10 @@ class OutlineMockService:
     def __init__(self):
         keys = []
         for i in range(10):
-            key = OutlineKey({})
-            key.key_id = f'{i}'
-            key.name = f'aboba{i}'
-            key.used_bytes = 13118344154 + 1000000000 * i
-            key.access_url = 'https://www.google.com'
+            key = OutlineKey(response={'id': str(i), 'name': f'aboba{i}',
+                                       'accessUrl': 'https://www.google.com'},
+                             metrics={'bytesTransferredByUserId': {
+                                 str(i): 13118344154 + 1000000000 * i}})
 
             keys.append(key)
 
@@ -20,11 +19,10 @@ class OutlineMockService:
     def create_key(self, name: str):
         len_keys = len(self.all_keys)
 
-        key = OutlineKey({})
-        key.key_id = len_keys
-        key.name = name
-        key.used_bytes = None
-        key.access_url = 'https://www.google.com'
+        key = OutlineKey(response={'id': len_keys, 'name': name,
+                                   'accessUrl': 'https://www.google.com'},
+                         metrics={'bytesTransferredByUserId': {
+                             len_keys: None}})
 
         self.all_keys.append(key)
 

@@ -87,8 +87,6 @@ async def new_key_handler(message: types.Message) -> None:
     """
     try:
         new_user = message.text.split()[1]
-        if '_' in new_user:
-            raise IndexError
     except IndexError:
         await bot.reply_to(message, "Key name is not valid")
         return
@@ -98,9 +96,11 @@ async def new_key_handler(message: types.Message) -> None:
     )
 
     text = _join_text('Success creation', f'ID: {key.key_id}',
-                      f'Name: {key.name}', _wrap_as_markdown(key.access_url))
-
-    await bot.send_message(message.from_user.id, text, parse_mode='Markdown')
+                      f'Name: {key.name}', 'Key in next message:')
+    await bot.send_message(message.from_user.id, text)
+    await bot.send_message(message.from_user.id,
+                           _wrap_as_markdown(key.access_url),
+                           parse_mode='Markdown')
     if message.chat.type != "private":
         await bot.reply_to(message, "Credentials sent to your DM.")
 
@@ -125,9 +125,11 @@ async def get_key_handler(message: types.Message) -> None:
         return
 
     text = _join_text('Got key', f'ID: {key.key_id}',
-                      f'Name: {key.name}', _wrap_as_markdown(key.access_url))
-
-    await bot.send_message(message.from_user.id, text, parse_mode='Markdown')
+                      f'Name: {key.name}', 'Key in next message:')
+    await bot.send_message(message.from_user.id, text)
+    await bot.send_message(message.from_user.id,
+                           _wrap_as_markdown(key.access_url),
+                           parse_mode='Markdown')
     if message.chat.type != "private":
         await bot.reply_to(message, "Credentials sent to your DM.")
 
