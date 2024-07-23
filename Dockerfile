@@ -11,4 +11,4 @@ RUN mkdir ./images
 RUN pip install --no-cache-dir -r requirements.txt
 
 # app command
-CMD ["python", "-u", "./code/main.py"]
+CMD ["python", "-u", "./code/run.py"]

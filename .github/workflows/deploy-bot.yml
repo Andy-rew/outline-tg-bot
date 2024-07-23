@@ -41,10 +41,10 @@ jobs:
     needs: push_to_registry
     runs-on: ubuntu-latest
     steps:
-    - name: executing deployment script
-      uses: appleboy/ssh-action@v0.1.10
-      with:
-        host: ${{ secrets.DEPLOYMENT_HOST }}
-        username: ${{ secrets.DEPLOYMENT_USERNAME }}
-        password: ${{ secrets.DEPLOYMENT_PASSWORD }}
-        script: cd ~/../home/outline-tg-bot/ && ./scripts/deploy.sh ${{ github.event.release.tag_name }}
+      - name: executing deployment script
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.DEPLOYMENT_HOST }}
+          username: ${{ secrets.DEPLOYMENT_USERNAME }}
+          password: ${{ secrets.DEPLOYMENT_PASSWORD }}
+          script: cd ~/../home/outline-tg-bot/ && ./scripts/deploy.sh ${{ github.event.release.tag_name }}
