@@ -10,7 +10,8 @@
 
 ## Description
 
-This service provides easy and user-friendly interface for OutlineVPN server managing.
+This service provides easy and user-friendly interface for OutlineVPN server
+managing.
 
 Bot shows users statistics and helps in creating and deleting Outline keys.
 
@@ -36,4 +37,5 @@ Run `main.py` file to run your bot.
 
 ## Questions
 
-With questions you can connect to developers via Telegram: `@andy_rew`, `@TimkaMLG`
+With questions you can connect to developers via
+Telegram: `@andy_rew`, `@TimkaMLG`

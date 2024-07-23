@@ -3,10 +3,8 @@ from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand
 
-from config import ADMINS
-from config import BOT_TOKEN
-from exceptions import BotExceptionHandler
-from exceptions import OutlineServerErrorException
+from config import ADMINS, BOT_TOKEN
+from exceptions import BotExceptionHandler, OutlineServerErrorException
 from outline import get_outline_client
 from utils import _join_text, _wrap_as_markdown
 

@@ -1,4 +1,6 @@
-from outline_vpn.outline_vpn import OutlineKey, OutlineServerErrorException
+from outline_vpn.outline_vpn import OutlineKey
+
+from exceptions import OutlineServerErrorException
 
 
 class OutlineMockService:
