@@ -8,6 +8,7 @@ from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand
 
+from exceptions import BotExceptionHandler
 from mockService import OutlineMockService
 from utils import _wrap_as_markdown, _join_text
 
@@ -16,7 +17,8 @@ config = dotenv_values(".env")
 if not config:
     config = os.environ
 
-bot = AsyncTeleBot(config.get('BOT_TOKEN'))
+bot = AsyncTeleBot(config.get('BOT_TOKEN'),
+                   exception_handler=BotExceptionHandler())
 
 is_mock_outline = config.get('MOCK_OUTLINE') == 'true'
 
