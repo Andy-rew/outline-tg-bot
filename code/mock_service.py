@@ -21,7 +21,7 @@ class OutlineMockService:
     def create_key(self, name: str):
         len_keys = len(self.all_keys)
 
-        key = OutlineKey(response={'id': len_keys, 'name': name,
+        key = OutlineKey(response={'id': str(len_keys), 'name': name,
                                    'accessUrl': 'https://www.google.com'},
                          metrics={'bytesTransferredByUserId': {
                              len_keys: None}})

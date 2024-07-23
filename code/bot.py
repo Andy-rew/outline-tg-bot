@@ -101,7 +101,6 @@ async def get_key_handler(message: types.Message) -> None:
     except IndexError:
         await bot.reply_to(message, "Key ID is not valid")
         return
-
     try:
         key = client.get_key(key_id=key_id)
     except OutlineServerErrorException:
