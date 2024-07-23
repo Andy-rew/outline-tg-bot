@@ -11,7 +11,7 @@ from telebot.types import BotCommand
 from mockService import OutlineMockService
 from utils import _wrap_as_markdown, _join_text
 
-config = dotenv_values("../.env")
+config = dotenv_values(".env")
 
 if not config:
     config = os.environ
@@ -66,14 +66,14 @@ async def metrics_handler(message: types.Message) -> None:
                        parse_mode='Markdown')
 
 
-async def check_admin(message: types.Message) -> bool:
+def check_admin(message: types.Message) -> bool:
     """
     Check if command was sent by admin or not
     :param message: command
     :return: True if user is admin, False otherwise
     """
     if str(message.from_user.id) not in admins:
-        await bot.reply_to(message, "Permission denied")
+        bot.reply_to(message, "Permission denied")
         return False
     return True
 
@@ -153,7 +153,7 @@ async def delete_key_handler(message: types.Message) -> None:
         buttons.append(button)
 
     cancel_button = types.InlineKeyboardButton(f"Cancel",
-                                               callback_data='-1')
+                                               callback_data='cancel')
     buttons.append(cancel_button)
     markup.add(*buttons)
 
@@ -161,16 +161,43 @@ async def delete_key_handler(message: types.Message) -> None:
                            reply_markup=markup)
 
 
-async def check_admin_callback(call: types.CallbackQuery) -> bool:
+def check_admin_callback(call: types.CallbackQuery) -> bool:
     """
     Check if callback was sent by admin or not
     :param call: callback
     :return: True if user is admin, False otherwise
     """
     if str(call.from_user.id) not in admins:
-        await bot.answer_callback_query(call.id, "Permission denied")
+        bot.answer_callback_query(call.id, "Permission denied")
         return False
     return True
+
+
+def cancel_callback(call: types.CallbackQuery) -> bool:
+    """
+    Check if cancel callback was sent
+    :param call:
+    :return: True if cancel was sent, False otherwise
+    """
+    if call.data == 'cancel':
+        return True
+    return False
+
+
+@bot.callback_query_handler(
+    func=lambda call: check_admin_callback(call) and cancel_callback(call))
+async def callback_query_cancel_handler(call: types.CallbackQuery) -> None:
+    """
+    Handle pressing button for cancel action
+    :param call:
+    :return: None
+    """
+    message = call.message
+    chat_id = message.chat.id
+    message_id = message.message_id
+    await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
+                                text=f'Canceled')
+    await bot.answer_callback_query(call.id, "Canceled")
 
 
 @bot.callback_query_handler(func=check_admin_callback)
@@ -183,12 +210,6 @@ async def callback_query_handler(call: types.CallbackQuery) -> None:
     message = call.message
     chat_id = message.chat.id
     message_id = message.message_id
-
-    if call.data == '-1':
-        await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
-                                    text=f'Canceled')
-        await bot.answer_callback_query(call.id, "Canceled")
-        return
 
     delete_status_ok = client.delete_key(call.data)
 
