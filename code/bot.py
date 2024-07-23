@@ -1,34 +1,18 @@
-import asyncio
-import os
-
 import pandas as pd
-from dotenv import dotenv_values
-from outline_vpn.outline_vpn import OutlineVPN, OutlineServerErrorException
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand
 
+from config import ADMINS
+from config import BOT_TOKEN
 from exceptions import BotExceptionHandler
-from mockService import OutlineMockService
-from utils import _wrap_as_markdown, _join_text
+from exceptions import OutlineServerErrorException
+from outline import get_outline_client
+from utils import _join_text, _wrap_as_markdown
 
-config = dotenv_values(".env")
-
-if not config:
-    config = os.environ
-
-bot = AsyncTeleBot(config.get('BOT_TOKEN'),
+bot = AsyncTeleBot(BOT_TOKEN,
                    exception_handler=BotExceptionHandler())
-
-is_mock_outline = config.get('MOCK_OUTLINE') == 'true'
-
-if is_mock_outline:
-    client = OutlineMockService()
-else:
-    client = OutlineVPN(api_url=config.get('API_URL'),
-                        cert_sha256=config.get('CERT_SHA256'), )
-
-admins = config.get('ADMINS').split(',')
+client = get_outline_client()
 
 
 @bot.message_handler(commands=['start'])
@@ -74,7 +58,7 @@ def check_admin(message: types.Message) -> bool:
     :param message: command
     :return: True if user is admin, False otherwise
     """
-    if str(message.from_user.id) not in admins:
+    if str(message.from_user.id) not in ADMINS:
         bot.reply_to(message, "Permission denied")
         return False
     return True
@@ -169,7 +153,7 @@ def check_admin_callback(call: types.CallbackQuery) -> bool:
     :param call: callback
     :return: True if user is admin, False otherwise
     """
-    if str(call.from_user.id) not in admins:
+    if str(call.from_user.id) not in ADMINS:
         bot.answer_callback_query(call.id, "Permission denied")
         return False
     return True
@@ -235,7 +219,7 @@ async def help_handler(message: types.Message) -> None:
     await bot.reply_to(message, "Use commands to manage OutlineVPN server")
 
 
-async def main() -> None:
+async def run_bot() -> None:
     """
     Make commands and start bot
     :return: None
@@ -253,7 +237,3 @@ async def main() -> None:
     await bot.set_my_commands(commands=commands)
 
     await bot.infinity_polling()
-
-
-if __name__ == '__main__':
-    asyncio.run(main())
