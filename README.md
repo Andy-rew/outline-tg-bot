@@ -20,6 +20,7 @@ Bot shows users statistics and helps in creating and deleting Outline keys.
 - `/start` shows welcome string.
 - `/metrics` shows users statistics.
 - `/new_key` adds new Outline key.
+- `/get_key` get credentials for existing Outline key.
 - `/delete_key` deletes old Outline key.
 - `/help` shows help string.
 
