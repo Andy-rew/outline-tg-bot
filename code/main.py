@@ -179,9 +179,9 @@ def cancel_callback(call: types.CallbackQuery) -> bool:
     :param call:
     :return: True if cancel was sent, False otherwise
     """
-    if call.data == 'cancel':
-        return True
-    return False
+    if call.data != 'cancel':
+        return False
+    return True
 
 
 @bot.callback_query_handler(
