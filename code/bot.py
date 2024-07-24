@@ -135,7 +135,7 @@ async def delete_key_handler(message: types.Message) -> None:
             callback_data=key.key_id)
         buttons.append(button)
 
-    cancel_button = types.InlineKeyboardButton(f"Cancel",
+    cancel_button = types.InlineKeyboardButton("Cancel",
                                                callback_data='cancel')
     buttons.append(cancel_button)
     markup.add(*buttons)
@@ -179,7 +179,7 @@ async def callback_query_cancel_handler(call: types.CallbackQuery) -> None:
     chat_id = message.chat.id
     message_id = message.message_id
     await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
-                                text=f'Canceled')
+                                text='Canceled')
     await bot.answer_callback_query(call.id, "Canceled")
 
 
