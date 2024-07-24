@@ -75,6 +75,12 @@ async def new_key_handler(message: types.Message) -> None:
         await bot.reply_to(message, "Key name is not valid")
         return
 
+    try:
+        await bot.send_message(message.from_user.id, 'Hi!')
+    except Exception:
+        await bot.reply_to(message, "Make sure bot has access to message you.")
+        return
+
     key = client.create_key(
         name=new_user,
     )
@@ -101,6 +107,13 @@ async def get_key_handler(message: types.Message) -> None:
     except IndexError:
         await bot.reply_to(message, "Key ID is not valid")
         return
+
+    try:
+        await bot.send_message(message.from_user.id, 'Hi!')
+    except Exception:
+        await bot.reply_to(message, "Make sure bot has access to message you.")
+        return
+
     try:
         key = client.get_key(key_id=key_id)
     except OutlineServerErrorException:
