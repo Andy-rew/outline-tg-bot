@@ -7,17 +7,30 @@ db = PostgresqlDatabase(POSTGRES_DATABASE, user=POSTGRES_USERNAME, password=POST
                         host=DB_HOST, port=DB_PORT)
 
 
-class MyUser(Model):
-    name = TextField()
-    city = TextField(constraints=[SQL("DEFAULT 'Mumbai'")])
-    age = IntegerField()
-
+class BaseModel(Model):
     class Meta:
         database = db
-        db_table = 'MyUser'
+
+
+class Users(BaseModel):
+    id = AutoField()
+    tg_id = TextField(unique=True)
+    name = TextField()
+    is_approved = BooleanField(default=False)
+    keys_count = IntegerField(default=0)
+    created_at = DateTimeField()
+    updated_at = DateTimeField()
+
+
+class Keys(BaseModel):
+    id = AutoField()
+    key_id = TextField(unique=True)
+    key_name = TextField()
+    user = ForeignKeyField(Users, field='id')
+    created_at = DateTimeField()
+    updated_at = DateTimeField()
 
 
 def create_tables():
     with db:
-        db.create_tables([MyUser])
-
+        db.create_tables([Users, Keys])
