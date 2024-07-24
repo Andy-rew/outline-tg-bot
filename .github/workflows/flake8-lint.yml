@@ -2,9 +2,7 @@ name: Flake8 Lint
 run-name: Flake8 Lint
 
 on:
-  pull_request:
-    types:
-      - opened
+  push:
 
 jobs:
   lint:
