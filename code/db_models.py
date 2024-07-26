@@ -1,5 +1,5 @@
 import psycopg2
-from peewee import *
+from peewee import (DateTimeField, IntegerField, TextField, BooleanField, ForeignKeyField, AutoField, PostgresqlDatabase, Model)
 
 from config import DB_HOST, DB_PORT, POSTGRES_USERNAME, POSTGRES_PASSWORD, POSTGRES_DATABASE
 
