@@ -3,51 +3,16 @@ from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand
 
+from user_service import new_user_start
 from config import ADMINS, BOT_TOKEN
 from exceptions import BotExceptionHandler, OutlineServerErrorException
 from outline import get_outline_client
 from utils import _join_text, _wrap_as_markdown
+from statistic_service import get_statistics_for_admin, get_statistics_for_user
 
 bot = AsyncTeleBot(BOT_TOKEN,
                    exception_handler=BotExceptionHandler())
 client = get_outline_client()
-
-
-@bot.message_handler(commands=['start'])
-async def start_handler(message: types.Message) -> None:
-    """
-    Show greeting to user
-    :param message: command
-    :return: None
-    """
-    await bot.reply_to(message, 'Welcome to Outline, body!')
-
-
-@bot.message_handler(commands=['metrics'])
-async def metrics_handler(message: types.Message) -> None:
-    """
-    Form statistics DataFrame and send it to user
-    :param message: command
-    :return: None
-    """
-    data = {'ID': [], 'Name': [], 'GB': []}
-
-    for key in client.get_keys():
-        key.used_bytes = 0 if key.used_bytes is None else key.used_bytes
-
-        used_gbytes = round(key.used_bytes / 1024 / 1024 / 1024, 2)
-        data['ID'].append(key.key_id)
-        data['Name'].append(key.name)
-        data['GB'].append(used_gbytes)
-
-    client_data = pd.DataFrame(data=data).sort_values(by='GB',
-                                                      ascending=False,
-                                                      ignore_index=True)
-
-    str_res = client_data.to_markdown(index=False)
-
-    await bot.reply_to(message, _wrap_as_markdown(str_res),
-                       parse_mode='Markdown')
 
 
 def check_admin(message: types.Message) -> bool:
@@ -60,6 +25,50 @@ def check_admin(message: types.Message) -> bool:
         bot.reply_to(message, "Permission denied")
         return False
     return True
+
+
+@bot.message_handler(commands=['start'])
+async def start_handler(message: types.Message) -> None:
+    """
+    Show greeting to user
+    :param message: command
+    :return: None
+    """
+
+    new_user_start(message.from_user.id, message.from_user.first_name)
+    await bot.reply_to(message, 'Welcome to Outline, body!')
+
+
+@bot.message_handler(func=check_admin, commands=['metrics'])
+async def metrics_handler(message: types.Message) -> None:
+    """
+    Form all statistics DataFrame and send it to user
+    :param message: command
+    :return: None
+    """
+
+    outline_keys = client.get_keys()
+
+    str_res = get_statistics_for_admin(outline_keys)
+
+    await bot.reply_to(message, _wrap_as_markdown(str_res),
+                       parse_mode='Markdown')
+
+
+@bot.message_handler(commands=['metrics_user'])
+async def metrics_handler(message: types.Message) -> None:
+    """
+    Form user statistics DataFrame and send it to user
+    :param message: command
+    :return: None
+    """
+
+    outline_keys = client.get_keys()
+
+    str_res = get_statistics_for_user(message.from_user.id, outline_keys)
+
+    await bot.reply_to(message, _wrap_as_markdown(str_res),
+                       parse_mode='Markdown')
 
 
 @bot.message_handler(func=check_admin, commands=['new_key'])
@@ -221,9 +230,12 @@ async def run_bot() -> None:
     Make commands and start bot
     :return: None
     """
+
+    # todo добавить разграничение команд в зависимости от роли
     commands = [
         BotCommand(command='start', description='Start'),
-        BotCommand(command='metrics', description='Show statistics'),
+        BotCommand(command='metrics', description='Show admin statistics'),
+        BotCommand(command='metrics_user', description='Show user statistics'),
         BotCommand(command='new_key', description='Add new key'),
         BotCommand(command='get_key',
                    description='Get credentials for existing key'),
