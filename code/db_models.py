@@ -1,11 +1,11 @@
-import psycopg2
-from peewee import (DateTimeField, IntegerField, TextField, BooleanField, ForeignKeyField, AutoField,
-                    PostgresqlDatabase, Model)
+from peewee import (DateTimeField, IntegerField, TextField, BooleanField,
+                    ForeignKeyField, AutoField, PostgresqlDatabase, Model)
 
-from config import DB_HOST, DB_PORT, POSTGRES_USERNAME, POSTGRES_PASSWORD, POSTGRES_DATABASE
+from config import (DB_HOST, DB_PORT, POSTGRES_USERNAME, POSTGRES_PASSWORD,
+                    POSTGRES_DATABASE)
 
-db = PostgresqlDatabase(POSTGRES_DATABASE, user=POSTGRES_USERNAME, password=POSTGRES_PASSWORD,
-                        host=DB_HOST, port=DB_PORT)
+db = PostgresqlDatabase(POSTGRES_DATABASE, user=POSTGRES_USERNAME,
+                        password=POSTGRES_PASSWORD, host=DB_HOST, port=DB_PORT)
 
 
 class BaseModel(Model):
