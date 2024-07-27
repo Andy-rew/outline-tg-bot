@@ -17,29 +17,56 @@ bot = AsyncTeleBot(BOT_TOKEN,
                    exception_handler=BotExceptionHandler())
 client = get_outline_client()
 
+admin_command = [
+    BotCommand(command='start', description='Start'),
+    BotCommand(command='admin_metrics', description='Show admin statistics'),
+    BotCommand(command='metrics', description='Show user statistics'),
+    BotCommand(command='new_key', description='Add new key'),
+    BotCommand(command='get_key',
+               description='Get credentials for existing key'),
+    BotCommand(command='users_for_approve', description='Get users for approve'),
+    BotCommand(command='admin_delete_key', description='Delete old key'),
+    BotCommand(command='delete_key', description='Delete old key'),
+    BotCommand(command='help', description='Get help')
+]
 
-async def check_admin(message: types.Message) -> bool:
+user_commands = [
+    BotCommand(command='start', description='Start'),
+    BotCommand(command='metrics', description='Show user statistics'),
+    BotCommand(command='new_key', description='Add new key'),
+    BotCommand(command='get_key',
+               description='Get credentials for existing key'),
+    BotCommand(command='delete_key', description='Delete old key'),
+    BotCommand(command='help', description='Get help')
+]
+
+
+async def check_admin(message: types.Message, no_reply=False) -> bool:
     """
     Check if command was sent by admin or not
+    :param no_reply:
     :param message: command
     :return: True if user is admin, False otherwise
     """
     if str(message.from_user.id) not in ADMINS:
-        await bot.reply_to(message, "Permission denied")
+        if not no_reply:
+            await bot.reply_to(message, "Permission denied")
         return False
     return True
 
 
-async def check_is_approved(message: types.Message) -> bool:
+async def check_is_approved(message: types.Message, no_reply=False) -> bool:
     """
     Check if user is approved
+    :param no_reply:
     :param message: command
     :return: True if user is approved, False otherwise
     """
     user = get_user_by_tg_id(message.from_user.id)
 
     if not user or user.is_approved is False:
-        await bot.reply_to(message, "Permission denied")
+        if not no_reply:
+            await bot.reply_to(message, "Permission denied")
         return False
     return True
 
@@ -51,13 +78,19 @@ async def start_handler(message: types.Message) -> None:
     :param message: command
     :return: None
     """
+
+    await bot.reply_to(message, 'Welcome to Outline, body!')
+
     try:
         new_user_start(message.from_user.id, message.from_user.first_name)
     except AbobaError as err:
         await bot.reply_to(message, f'{err}')
-        return
 
-    await bot.reply_to(message, 'Welcome to Outline, body!\nPlease wait for admin approval')
+    if await check_admin(message, True):
+        await bot.set_my_commands(admin_command)
+    elif await check_is_approved(message, True):
+        await bot.set_my_commands(user_commands)
+
 
 
 @bot.message_handler(func=check_admin, commands=['admin_metrics'])
@@ -276,15 +309,6 @@ async def run_bot() -> None:
     # todo добавить разграничение команд в зависимости от роли после start
     commands = [
         BotCommand(command='start', description='Start'),
-        BotCommand(command='admin_metrics', description='Show admin statistics'),
-        BotCommand(command='metrics', description='Show user statistics'),
-        BotCommand(command='new_key', description='Add new key'),
-        BotCommand(command='get_key',
-                   description='Get credentials for existing key'),
-        BotCommand(command='users_for_approve', description='Get users for approve'),
-        BotCommand(command='admin_delete_key', description='Delete old key'),
-        BotCommand(command='delete_key', description='Delete old key'),
-        BotCommand(command='help', description='Get help')
     ]
 
     await bot.set_my_commands(commands=commands)
