@@ -30,7 +30,7 @@ class Keys(BaseModel):
     id = AutoField()
     key_id = TextField(unique=True)
     key_name = TextField()
-    user = ForeignKeyField(Users, field='id')
+    user = ForeignKeyField(Users, field='id', backref='keys')
     created_at = DateTimeField()
     updated_at = DateTimeField()
 
@@ -77,11 +77,11 @@ def get_user_keys(tg_id) -> list[Keys]:
     return Keys.select().join(Users).where(Keys.user.tg_id == tg_id)
 
 
-def create_new_key(tg_id, key_name, key_id):
+def create_new_key(user, key_name, key_id):
     Keys.create(
         key_id=key_id,
         key_name=key_name,
-        user=Users.select().where(Users.tg_id == tg_id).get(),
+        user=user,
         created_at=datetime.now(),
         updated_at=datetime.now()
     )

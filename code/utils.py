@@ -10,6 +10,8 @@ from db_models import Users
 class CallbackEnum(Enum):
     delete_key = 'delete_key'
     approve_user = 'approve_user'
+    cancel = 'cancel'
+
 
 def _wrap_as_markdown(text: str) -> str:
     """
@@ -48,29 +50,29 @@ def create_statistic_md_table(keys: list[OutlineKey]):
     return str_res
 
 
-def create_deletion_keys_buttons(keys: list[OutlineKey]) -> list[types.InlineKeyboardButton]:
+def create_deletion_keys_buttons(keys: list[OutlineKey], tg_id) -> list[types.InlineKeyboardButton]:
     buttons = []
     for key in keys:
         button = types.InlineKeyboardButton(
             f"ID: {key.key_id}, Name: {key.name}",
-            callback_data=f"{CallbackEnum.delete_key.value} {key.key_id}")
+            callback_data=f"{CallbackEnum.delete_key.value} {tg_id} {key.key_id}")
         buttons.append(button)
 
     cancel_button = types.InlineKeyboardButton("Cancel",
-                                               callback_data='cancel')
+                                               caпllback_data=f'cancel {tg_id}')
     buttons.append(cancel_button)
     return buttons
 
 
-def create_users_list_buttons(users: list[Users]) -> list[types.InlineKeyboardButton]:
+def create_users_list_buttons(users: list[Users], tg_id) -> list[types.InlineKeyboardButton]:
     buttons = []
     for user in users:
         button = types.InlineKeyboardButton(
             f"ID: {user.id}, Name: {user.name}",
-            callback_data=f"{CallbackEnum.approve_user.value} {user.id}")
+            callback_data=f"{CallbackEnum.approve_user.value} {tg_id} {user.id}")
         buttons.append(button)
 
     cancel_button = types.InlineKeyboardButton("Cancel",
-                                               callback_data='cancel')
+                                               callback_data=f'{CallbackEnum.cancel.value} {tg_id}')
     buttons.append(cancel_button)
     return buttons

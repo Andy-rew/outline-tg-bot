@@ -3,13 +3,14 @@ from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand
 
+from db_models import get_user_by_tg_id
 from keys_service import get_admin_key_deletion_buttons, get_user_key_deletion_buttons, get_users_for_approve_buttons, \
-    create_new_user_key
+    create_new_user_key, get_key_info
 from user_service import new_user_start, approve_new_user
 from config import ADMINS, BOT_TOKEN
-from exceptions import BotExceptionHandler, OutlineServerErrorException
+from exceptions import BotExceptionHandler, OutlineServerErrorException, AbobaError
 from outline import get_outline_client
-from utils import _join_text, _wrap_as_markdown, create_deletion_keys_buttons, CallbackEnum
+from utils import _join_text, _wrap_as_markdown, CallbackEnum
 from statistic_service import get_statistics_for_admin, get_statistics_for_user
 
 bot = AsyncTeleBot(BOT_TOKEN,
@@ -17,14 +18,28 @@ bot = AsyncTeleBot(BOT_TOKEN,
 client = get_outline_client()
 
 
-def check_admin(message: types.Message) -> bool:
+async def check_admin(message: types.Message) -> bool:
     """
     Check if command was sent by admin or not
     :param message: command
     :return: True if user is admin, False otherwise
     """
     if str(message.from_user.id) not in ADMINS:
-        bot.reply_to(message, "Permission denied")
+        await bot.reply_to(message, "Permission denied")
+        return False
+    return True
+
+
+async def check_is_approved(message: types.Message) -> bool:
+    """
+    Check if user is approved
+    :param message: command
+    :return: True if user is approved, False otherwise
+    """
+    user = get_user_by_tg_id(message.from_user.id)
+
+    if not user or user.is_approved is False:
+        await bot.reply_to(message, "Permission denied")
         return False
     return True
 
@@ -36,13 +51,17 @@ async def start_handler(message: types.Message) -> None:
     :param message: command
     :return: None
     """
+    try:
+        new_user_start(message.from_user.id, message.from_user.first_name)
+    except AbobaError as err:
+        await bot.reply_to(message, f'{err}')
+        return
 
-    new_user_start(message.from_user.id, message.from_user.first_name)
-    await bot.reply_to(message, 'Welcome to Outline, body!')
+    await bot.reply_to(message, 'Welcome to Outline, body!\nPlease wait for admin approval')
 
 
 @bot.message_handler(func=check_admin, commands=['admin_metrics'])
-async def metrics_handler(message: types.Message) -> None:
+async def admin_metrics_handler(message: types.Message) -> None:
     """
     Form all statistics DataFrame and send it to user
     :param message: command
@@ -55,7 +74,7 @@ async def metrics_handler(message: types.Message) -> None:
                        parse_mode='Markdown')
 
 
-@bot.message_handler(commands=['metrics'])
+@bot.message_handler(func=check_is_approved, commands=['metrics'])
 async def metrics_handler(message: types.Message) -> None:
     """
     Form user statistics DataFrame and send it to user
@@ -69,7 +88,7 @@ async def metrics_handler(message: types.Message) -> None:
                        parse_mode='Markdown')
 
 
-@bot.message_handler(func=check_admin, commands=['new_key'])
+@bot.message_handler(func=check_is_approved, commands=['new_key'])
 async def new_key_handler(message: types.Message) -> None:
     """
     Try to create a new key in OutlineVPN server
@@ -82,7 +101,11 @@ async def new_key_handler(message: types.Message) -> None:
         await bot.reply_to(message, "Key name is not valid")
         return
 
-    key = create_new_user_key(message.from_user.id, new_key)
+    try:
+        key = create_new_user_key(message.from_user.id, new_key)
+    except AbobaError as err:
+        await bot.reply_to(message, f'{err}')
+        return
 
     text = _join_text('Success creation', f'ID: {key.key_id}',
                       f'Name: {key.name}', 'Key in next message:')
@@ -94,7 +117,7 @@ async def new_key_handler(message: types.Message) -> None:
         await bot.reply_to(message, "Credentials sent to your DM.")
 
 
-@bot.message_handler(func=check_admin, commands=['get_key'])
+@bot.message_handler(func=check_is_approved, commands=['get_key'])
 async def get_key_handler(message: types.Message) -> None:
     """
     Try to get credentials for existing key in OutlineVPN server
@@ -106,10 +129,11 @@ async def get_key_handler(message: types.Message) -> None:
     except IndexError:
         await bot.reply_to(message, "Key ID is not valid")
         return
+
     try:
-        key = client.get_key(key_id=key_id)
-    except OutlineServerErrorException:
-        await bot.reply_to(message, "Unable to get key")
+        key = get_key_info(message.from_user.id, key_id)
+    except AbobaError as err:
+        await bot.reply_to(message, f"{err}")
         return
 
     text = _join_text('Got key', f'ID: {key.key_id}',
@@ -123,7 +147,7 @@ async def get_key_handler(message: types.Message) -> None:
 
 
 @bot.message_handler(func=check_admin, commands=['admin_delete_key'])
-async def delete_key_handler(message: types.Message) -> None:
+async def admin_delete_key_handler(message: types.Message) -> None:
     """
     Try to delete old key from OutlineVPN server
     :param message: command
@@ -131,14 +155,14 @@ async def delete_key_handler(message: types.Message) -> None:
     """
     markup = types.InlineKeyboardMarkup(row_width=1)
 
-    buttons = get_admin_key_deletion_buttons()
+    buttons = get_admin_key_deletion_buttons(message.from_user.id)
     markup.add(*buttons)
 
     await bot.send_message(message.chat.id, "Choose key for deletion",
                            reply_markup=markup)
 
 
-@bot.message_handler(func=check_admin, commands=['delete_key'])
+@bot.message_handler(func=check_is_approved, commands=['delete_key'])
 async def delete_key_handler(message: types.Message) -> None:
     """
     Try to delete old key from OutlineVPN server
@@ -163,56 +187,21 @@ async def get_users_for_approve_handler(message: types.Message) -> None:
     """
     markup = types.InlineKeyboardMarkup(row_width=1)
 
-    buttons = get_users_for_approve_buttons()
+    buttons = get_users_for_approve_buttons(message.from_user.id)
     markup.add(*buttons)
 
     await bot.send_message(message.chat.id, "Choose user for approve",
                            reply_markup=markup)
 
 
-def check_admin_callback(call: types.CallbackQuery) -> bool:
-    """
-    Check if callback was sent by admin or not
-    :param call: callback
-    :return: True if user is admin, False otherwise
-    """
-    if str(call.from_user.id) not in ADMINS:
-        bot.answer_callback_query(call.id, "Permission denied")
-        return False
+def query_callback(call: types.CallbackQuery) -> bool:
     return True
 
 
-def cancel_callback(call: types.CallbackQuery) -> bool:
-    """
-    Check if cancel callback was sent
-    :param call:
-    :return: True if cancel was sent, False otherwise
-    """
-    if call.data != 'cancel':
-        return False
-    return True
-
-
-@bot.callback_query_handler(
-    func=lambda call: check_admin_callback(call) and cancel_callback(call))
-async def callback_query_cancel_handler(call: types.CallbackQuery) -> None:
-    """
-    Handle pressing button for cancel action
-    :param call:
-    :return: None
-    """
-    message = call.message
-    chat_id = message.chat.id
-    message_id = message.message_id
-    await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
-                                text='Canceled')
-    await bot.answer_callback_query(call.id, "Canceled")
-
-
-@bot.callback_query_handler(func=check_admin_callback)
+@bot.callback_query_handler(func=query_callback)
 async def callback_query_handler(call: types.CallbackQuery) -> None:
     """
-    Handle pressing button for deleting key
+    Handle pressing button for action on key
     :param call: Pressed button
     :return: None
     """
@@ -221,12 +210,18 @@ async def callback_query_handler(call: types.CallbackQuery) -> None:
     message_id = message.message_id
 
     action = call.data.split(' ')[0]
-    data_id = call.data.split(' ')[1]
+    query_worker_id = call.data.split(' ')[1]
+
+    if query_worker_id != str(call.from_user.id):
+        await bot.answer_callback_query(call.id, "Permission denied")
+        return
 
     if action not in CallbackEnum.__members__:
         await bot.answer_callback_query(call.id, "Action not found")
 
     if action == CallbackEnum.delete_key.value:
+        data_id = call.data.split(' ')[2]
+
         delete_status_ok = client.delete_key(data_id)
 
         if delete_status_ok:
@@ -239,15 +234,27 @@ async def callback_query_handler(call: types.CallbackQuery) -> None:
             await bot.answer_callback_query(call.id, "Failed")
 
     elif action == CallbackEnum.approve_user.value:
-        approve_status_ok = approve_new_user(data_id)
+        data_id = call.data.split(' ')[2]
+
+        approved_user = approve_new_user(data_id)
+        approve_status_ok = approved_user.is_approved
+
         if approve_status_ok:
             await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
                                         text=f'Success approve\nID: {data_id}')
             await bot.answer_callback_query(call.id, "Done")
+
+            await bot.send_message(approved_user.tg_id,
+                                   f"You are approved by admin and can create {approved_user.keys_count} VPN keys")
         else:
             await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
                                         text="Failed approve")
             await bot.answer_callback_query(call.id, "Failed")
+
+    elif action == CallbackEnum.cancel.value:
+        await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
+                                    text='Canceled')
+        await bot.answer_callback_query(call.id, "Canceled")
 
 
 @bot.message_handler(commands=['help'])
