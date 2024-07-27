@@ -1,10 +1,11 @@
+
 from datetime import datetime
 
 from peewee import (DateTimeField, IntegerField, TextField, BooleanField,
-                    ForeignKeyField, AutoField, PostgresqlDatabase, Model)
+                    ForeignKeyField, AutoField, PostgresqlDatabase, Model, DoesNotExist)
 
 from config import (DB_HOST, DB_PORT, POSTGRES_USERNAME, POSTGRES_PASSWORD,
-                    POSTGRES_DATABASE, KEYS_COUNT)
+                    POSTGRES_DATABASE, KEYS_COUNT, IS_MOCK_OUTLINE)
 
 db = PostgresqlDatabase(POSTGRES_DATABASE, user=POSTGRES_USERNAME,
                         password=POSTGRES_PASSWORD, host=DB_HOST, port=DB_PORT)
@@ -50,8 +51,18 @@ def create_new_user_on_start(tg_id, name):
     )
 
 
-def get_user(tg_id) -> Users:
-    return Users.select().where(Users.tg_id == tg_id).get()
+def get_user_by_tg_id(tg_id):
+    try:
+        return Users.select().where(Users.tg_id == tg_id).get()
+    except DoesNotExist:
+        return None
+
+
+def get_user_by_id(user_id):
+    try:
+        return Users.select().where(Users.id == user_id).get()
+    except DoesNotExist:
+        return None
 
 
 def approve_user(user_id):
@@ -66,7 +77,7 @@ def get_user_keys(tg_id) -> list[Keys]:
     return Keys.select().join(Users).where(Keys.user.tg_id == tg_id)
 
 
-def create_key(tg_id, key_name, key_id):
+def create_new_key(tg_id, key_name, key_id):
     Keys.create(
         key_id=key_id,
         key_name=key_name,
@@ -82,3 +93,9 @@ def change_keys_count(tg_id, key_count):
 
 def delete_key(key_id):
     Keys.delete().where(Keys.key_id == key_id).execute()
+
+
+def clear_db():
+    if IS_MOCK_OUTLINE is True:
+        Keys.delete().execute()
+        Users.delete().execute()

@@ -3,11 +3,13 @@ from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand
 
-from user_service import new_user_start
+from keys_service import get_admin_key_deletion_buttons, get_user_key_deletion_buttons, get_users_for_approve_buttons, \
+    create_new_user_key
+from user_service import new_user_start, approve_new_user
 from config import ADMINS, BOT_TOKEN
 from exceptions import BotExceptionHandler, OutlineServerErrorException
 from outline import get_outline_client
-from utils import _join_text, _wrap_as_markdown
+from utils import _join_text, _wrap_as_markdown, create_deletion_keys_buttons, CallbackEnum
 from statistic_service import get_statistics_for_admin, get_statistics_for_user
 
 bot = AsyncTeleBot(BOT_TOKEN,
@@ -39,7 +41,7 @@ async def start_handler(message: types.Message) -> None:
     await bot.reply_to(message, 'Welcome to Outline, body!')
 
 
-@bot.message_handler(func=check_admin, commands=['metrics'])
+@bot.message_handler(func=check_admin, commands=['admin_metrics'])
 async def metrics_handler(message: types.Message) -> None:
     """
     Form all statistics DataFrame and send it to user
@@ -47,15 +49,13 @@ async def metrics_handler(message: types.Message) -> None:
     :return: None
     """
 
-    outline_keys = client.get_keys()
-
-    str_res = get_statistics_for_admin(outline_keys)
+    str_res = get_statistics_for_admin()
 
     await bot.reply_to(message, _wrap_as_markdown(str_res),
                        parse_mode='Markdown')
 
 
-@bot.message_handler(commands=['metrics_user'])
+@bot.message_handler(commands=['metrics'])
 async def metrics_handler(message: types.Message) -> None:
     """
     Form user statistics DataFrame and send it to user
@@ -63,9 +63,7 @@ async def metrics_handler(message: types.Message) -> None:
     :return: None
     """
 
-    outline_keys = client.get_keys()
-
-    str_res = get_statistics_for_user(message.from_user.id, outline_keys)
+    str_res = get_statistics_for_user(message.from_user.id)
 
     await bot.reply_to(message, _wrap_as_markdown(str_res),
                        parse_mode='Markdown')
@@ -79,14 +77,12 @@ async def new_key_handler(message: types.Message) -> None:
     :return: None
     """
     try:
-        new_user = message.text.split()[1]
+        new_key = message.text.split()[1]
     except IndexError:
         await bot.reply_to(message, "Key name is not valid")
         return
 
-    key = client.create_key(
-        name=new_user,
-    )
+    key = create_new_user_key(message.from_user.id, new_key)
 
     text = _join_text('Success creation', f'ID: {key.key_id}',
                       f'Name: {key.name}', 'Key in next message:')
@@ -126,6 +122,22 @@ async def get_key_handler(message: types.Message) -> None:
         await bot.reply_to(message, "Credentials sent to your DM.")
 
 
+@bot.message_handler(func=check_admin, commands=['admin_delete_key'])
+async def delete_key_handler(message: types.Message) -> None:
+    """
+    Try to delete old key from OutlineVPN server
+    :param message: command
+    :return: None
+    """
+    markup = types.InlineKeyboardMarkup(row_width=1)
+
+    buttons = get_admin_key_deletion_buttons()
+    markup.add(*buttons)
+
+    await bot.send_message(message.chat.id, "Choose key for deletion",
+                           reply_markup=markup)
+
+
 @bot.message_handler(func=check_admin, commands=['delete_key'])
 async def delete_key_handler(message: types.Message) -> None:
     """
@@ -135,21 +147,26 @@ async def delete_key_handler(message: types.Message) -> None:
     """
     markup = types.InlineKeyboardMarkup(row_width=1)
 
-    keys = client.get_keys()
-
-    buttons = []
-    for key in keys:
-        button = types.InlineKeyboardButton(
-            f"ID: {key.key_id}, Name: {key.name}",
-            callback_data=key.key_id)
-        buttons.append(button)
-
-    cancel_button = types.InlineKeyboardButton("Cancel",
-                                               callback_data='cancel')
-    buttons.append(cancel_button)
+    buttons = get_user_key_deletion_buttons(message.from_user.id)
     markup.add(*buttons)
 
     await bot.send_message(message.chat.id, "Choose key for deletion",
+                           reply_markup=markup)
+
+
+@bot.message_handler(func=check_admin, commands=['users_for_approve'])
+async def get_users_for_approve_handler(message: types.Message) -> None:
+    """
+    Try to delete old key from OutlineVPN server
+    :param message: command
+    :return: None
+    """
+    markup = types.InlineKeyboardMarkup(row_width=1)
+
+    buttons = get_users_for_approve_buttons()
+    markup.add(*buttons)
+
+    await bot.send_message(message.chat.id, "Choose user for approve",
                            reply_markup=markup)
 
 
@@ -203,16 +220,34 @@ async def callback_query_handler(call: types.CallbackQuery) -> None:
     chat_id = message.chat.id
     message_id = message.message_id
 
-    delete_status_ok = client.delete_key(call.data)
+    action = call.data.split(' ')[0]
+    data_id = call.data.split(' ')[1]
 
-    if delete_status_ok:
-        await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
-                                    text=f'Success deletion\nID: {call.data}')
-        await bot.answer_callback_query(call.id, "Done")
-    else:
-        await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
-                                    text="Failed deletion")
-        await bot.answer_callback_query(call.id, "Failed")
+    if action not in CallbackEnum.__members__:
+        await bot.answer_callback_query(call.id, "Action not found")
+
+    if action == CallbackEnum.delete_key.value:
+        delete_status_ok = client.delete_key(data_id)
+
+        if delete_status_ok:
+            await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
+                                        text=f'Success deletion\nID: {data_id}')
+            await bot.answer_callback_query(call.id, "Done")
+        else:
+            await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
+                                        text="Failed deletion")
+            await bot.answer_callback_query(call.id, "Failed")
+
+    elif action == CallbackEnum.approve_user.value:
+        approve_status_ok = approve_new_user(data_id)
+        if approve_status_ok:
+            await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
+                                        text=f'Success approve\nID: {data_id}')
+            await bot.answer_callback_query(call.id, "Done")
+        else:
+            await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
+                                        text="Failed approve")
+            await bot.answer_callback_query(call.id, "Failed")
 
 
 @bot.message_handler(commands=['help'])
@@ -231,14 +266,16 @@ async def run_bot() -> None:
     :return: None
     """
 
-    # todo добавить разграничение команд в зависимости от роли
+    # todo добавить разграничение команд в зависимости от роли после start
     commands = [
         BotCommand(command='start', description='Start'),
-        BotCommand(command='metrics', description='Show admin statistics'),
-        BotCommand(command='metrics_user', description='Show user statistics'),
+        BotCommand(command='admin_metrics', description='Show admin statistics'),
+        BotCommand(command='metrics', description='Show user statistics'),
         BotCommand(command='new_key', description='Add new key'),
         BotCommand(command='get_key',
                    description='Get credentials for existing key'),
+        BotCommand(command='users_for_approve', description='Get users for approve'),
+        BotCommand(command='admin_delete_key', description='Delete old key'),
         BotCommand(command='delete_key', description='Delete old key'),
         BotCommand(command='help', description='Get help')
     ]

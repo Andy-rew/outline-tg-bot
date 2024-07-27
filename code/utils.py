@@ -1,6 +1,15 @@
+from enum import Enum
+
 import pandas as pd
 from outline_vpn.outline_vpn import OutlineKey
+from telebot import types
 
+from db_models import Users
+
+
+class CallbackEnum(Enum):
+    delete_key = 'delete_key'
+    approve_user = 'approve_user'
 
 def _wrap_as_markdown(text: str) -> str:
     """
@@ -37,3 +46,31 @@ def create_statistic_md_table(keys: list[OutlineKey]):
 
     str_res = client_data.to_markdown(index=False)
     return str_res
+
+
+def create_deletion_keys_buttons(keys: list[OutlineKey]) -> list[types.InlineKeyboardButton]:
+    buttons = []
+    for key in keys:
+        button = types.InlineKeyboardButton(
+            f"ID: {key.key_id}, Name: {key.name}",
+            callback_data=f"{CallbackEnum.delete_key.value} {key.key_id}")
+        buttons.append(button)
+
+    cancel_button = types.InlineKeyboardButton("Cancel",
+                                               callback_data='cancel')
+    buttons.append(cancel_button)
+    return buttons
+
+
+def create_users_list_buttons(users: list[Users]) -> list[types.InlineKeyboardButton]:
+    buttons = []
+    for user in users:
+        button = types.InlineKeyboardButton(
+            f"ID: {user.id}, Name: {user.name}",
+            callback_data=f"{CallbackEnum.approve_user.value} {user.id}")
+        buttons.append(button)
+
+    cancel_button = types.InlineKeyboardButton("Cancel",
+                                               callback_data='cancel')
+    buttons.append(cancel_button)
+    return buttons
