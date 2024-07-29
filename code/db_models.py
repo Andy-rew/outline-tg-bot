@@ -1,11 +1,10 @@
-
 from datetime import datetime
 
 from peewee import (DateTimeField, IntegerField, TextField, BooleanField,
                     ForeignKeyField, AutoField, PostgresqlDatabase, Model, DoesNotExist)
 
 from config import (DB_HOST, DB_PORT, POSTGRES_USERNAME, POSTGRES_PASSWORD,
-                    POSTGRES_DATABASE, KEYS_COUNT, IS_MOCK_OUTLINE)
+                    POSTGRES_DATABASE, KEYS_COUNT, IS_MOCK_OUTLINE, RECREATE_DB_ON_START)
 
 db = PostgresqlDatabase(POSTGRES_DATABASE, user=POSTGRES_USERNAME,
                         password=POSTGRES_PASSWORD, host=DB_HOST, port=DB_PORT)
@@ -96,6 +95,10 @@ def delete_key(key_id):
 
 
 def clear_db():
-    if IS_MOCK_OUTLINE is True:
+    if IS_MOCK_OUTLINE is True and RECREATE_DB_ON_START is True:
         Keys.delete().execute()
         Users.delete().execute()
+
+
+def get_keys() -> list[Keys]:
+    return Keys.select()

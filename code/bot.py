@@ -1,7 +1,7 @@
 import pandas as pd
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import BotCommand
+from telebot.types import BotCommand, BotCommandScopeChat
 
 from db_models import get_user_by_tg_id
 from keys_service import get_admin_key_deletion_buttons, get_user_key_deletion_buttons, get_users_for_approve_buttons, \
@@ -17,7 +17,7 @@ bot = AsyncTeleBot(BOT_TOKEN,
                    exception_handler=BotExceptionHandler())
 client = get_outline_client()
 
-admin_command = [
+admin_commands = [
     BotCommand(command='start', description='Start'),
     BotCommand(command='admin_metrics', description='Show admin statistics'),
     BotCommand(command='metrics', description='Show user statistics'),
@@ -87,9 +87,9 @@ async def start_handler(message: types.Message) -> None:
         await bot.reply_to(message, f'{err}')
 
     if await check_admin(message, True):
-        await bot.set_my_commands(admin_command)
+        await bot.set_my_commands(admin_commands, scope=BotCommandScopeChat(chat_id=message.chat.id))
     elif await check_is_approved(message, True):
-        await bot.set_my_commands(user_commands)
+        await bot.set_my_commands(user_commands, scope=BotCommandScopeChat(chat_id=message.chat.id))
 
 
 
@@ -181,6 +181,8 @@ async def get_key_handler(message: types.Message) -> None:
 
 @bot.message_handler(func=check_admin, commands=['admin_delete_key'])
 async def admin_delete_key_handler(message: types.Message) -> None:
+    # todo fix delete markup, not show and error
+
     """
     Try to delete old key from OutlineVPN server
     :param message: command
