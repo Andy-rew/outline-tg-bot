@@ -59,7 +59,7 @@ def create_deletion_keys_buttons(keys: list[OutlineKey], tg_id) -> list[types.In
         buttons.append(button)
 
     cancel_button = types.InlineKeyboardButton("Cancel",
-                                               caпllback_data=f'cancel {tg_id}')
+                                               callback_data=f'{CallbackEnum.cancel.value} {tg_id}')
     buttons.append(cancel_button)
     return buttons
 

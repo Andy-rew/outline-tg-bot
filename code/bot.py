@@ -181,8 +181,6 @@ async def get_key_handler(message: types.Message) -> None:
 
 @bot.message_handler(func=check_admin, commands=['admin_delete_key'])
 async def admin_delete_key_handler(message: types.Message) -> None:
-    # todo fix delete markup, not show and error
-
     """
     Try to delete old key from OutlineVPN server
     :param message: command
