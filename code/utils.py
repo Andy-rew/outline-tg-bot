@@ -10,7 +10,8 @@ from db_models import Users
 class CallbackEnum(Enum):
     delete_key = 'delete_key'
     approve_user = 'approve_user'
-    cancel = 'cancel'
+    cancel = 'cancel',
+    view_key = 'view_key'
 
 
 def _wrap_as_markdown(text: str) -> str:
@@ -50,16 +51,16 @@ def create_statistic_md_table(keys: list[OutlineKey]):
     return str_res
 
 
-def create_deletion_keys_buttons(keys: list[OutlineKey], tg_id) -> list[types.InlineKeyboardButton]:
+def create_keys_list_buttons(keys: list[OutlineKey], tg_id, callback_type) -> list[types.InlineKeyboardButton]:
     buttons = []
     for key in keys:
         button = types.InlineKeyboardButton(
             f"ID: {key.key_id}, Name: {key.name}",
-            callback_data=f"{CallbackEnum.delete_key.value} {tg_id} {key.key_id}")
+            callback_data=f"{callback_type} {tg_id} {key.key_id}")
         buttons.append(button)
 
     cancel_button = types.InlineKeyboardButton("Cancel",
-                                               callback_data=f'{CallbackEnum.cancel.value} {tg_id}')
+                                               callback_data=f'{callback_type} {tg_id}')
     buttons.append(cancel_button)
     return buttons
 
