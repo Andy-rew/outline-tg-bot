@@ -22,13 +22,16 @@ class OutlineMockService:
                                      str(i): 13118344154 + 1000000000 * i}})
 
                 self.all_keys.append(key)
-                create_new_user_on_start(f'123{i * random.randint(1, 100000)}', f'aboba{i}')
+                create_new_user_on_start(f'123{i * random.randint(1, 100000)}',
+                                         f'aboba{i}')
         else:
             db_keys = get_keys()
             for db_key in db_keys:
-                key = OutlineKey(response={'id': db_key.key_id, 'name': f'{db_key.key_name}',
+                key = OutlineKey(response={'id': db_key.key_id,
+                                           'name': f'{db_key.key_name}',
                                            'accessUrl': 'https://www.google.com'},
-                                 metrics={'bytesTransferredByUserId': {db_key.key_id: 0}})
+                                 metrics={'bytesTransferredByUserId': {
+                                     db_key.key_id: 0}})
 
                 self.all_keys.append(key)
 

@@ -1,17 +1,17 @@
-import pandas as pd
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand, BotCommandScopeChat
 
-from db_models import get_user_by_tg_id
-from keys_service import get_admin_key_deletion_buttons, get_user_key_deletion_buttons, get_users_for_approve_buttons, \
-    create_new_user_key, get_key_info, get_user_key_view_buttons
-from user_service import new_user_start, approve_new_user
 from config import ADMINS, BOT_TOKEN
+from db_models import get_user_by_tg_id
 from exceptions import BotExceptionHandler, AbobaError
+from keys_service import get_admin_key_deletion_buttons, \
+    get_user_key_deletion_buttons, get_users_for_approve_buttons, \
+    create_new_user_key, get_key_info, get_user_key_view_buttons
 from outline import get_outline_client
-from utils import _join_text, _wrap_as_markdown, CallbackEnum
 from statistic_service import get_statistics_for_admin, get_statistics_for_user
+from user_service import new_user_start, approve_new_user
+from utils import _join_text, _wrap_as_markdown, CallbackEnum
 
 bot = AsyncTeleBot(BOT_TOKEN,
                    exception_handler=BotExceptionHandler())
@@ -24,7 +24,8 @@ admin_commands = [
     BotCommand(command='new_key', description='Add new key'),
     BotCommand(command='get_key',
                description='Get credentials for existing key'),
-    BotCommand(command='users_for_approve', description='Get users for approve'),
+    BotCommand(command='users_for_approve',
+               description='Get users for approve'),
     BotCommand(command='admin_delete_key', description='Delete old key'),
     BotCommand(command='delete_key', description='Delete old key'),
     BotCommand(command='help', description='Get help')
@@ -86,12 +87,15 @@ async def start_handler(message: types.Message) -> None:
     except AbobaError as err:
         await bot.reply_to(message, f'{err}')
 
-    await bot.delete_my_commands(scope=BotCommandScopeChat(chat_id=message.chat.id))
+    await bot.delete_my_commands(
+        scope=BotCommandScopeChat(chat_id=message.chat.id))
 
     if await check_admin(message, True):
-        await bot.set_my_commands(admin_commands, scope=BotCommandScopeChat(chat_id=message.chat.id))
+        await bot.set_my_commands(admin_commands, scope=BotCommandScopeChat(
+            chat_id=message.chat.id))
     elif await check_is_approved(message, True):
-        await bot.set_my_commands(user_commands, scope=BotCommandScopeChat(chat_id=message.chat.id))
+        await bot.set_my_commands(user_commands, scope=BotCommandScopeChat(
+            chat_id=message.chat.id))
 
 
 @bot.message_handler(func=check_admin, commands=['admin_metrics'])
@@ -268,7 +272,8 @@ async def callback_query_handler(call: types.CallbackQuery) -> None:
             sent_message = await bot.send_message(approved_user.tg_id,
                                                   f"You are approved by admin and can create {approved_user.keys_count} VPN keys")
 
-            await bot.set_my_commands(user_commands, scope=BotCommandScopeChat(chat_id=sent_message.chat.id))
+            await bot.set_my_commands(user_commands, scope=BotCommandScopeChat(
+                chat_id=sent_message.chat.id))
 
         else:
             await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
@@ -291,7 +296,8 @@ async def callback_query_handler(call: types.CallbackQuery) -> None:
                                _wrap_as_markdown(key.access_url),
                                parse_mode='Markdown')
         if message.chat.type != "private":
-            await bot.answer_callback_query(call.id, "Credentials sent to your DM.")
+            await bot.answer_callback_query(call.id,
+                                            "Credentials sent to your DM.")
 
         await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
                                     text=f'Success')

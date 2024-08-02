@@ -51,7 +51,8 @@ def create_statistic_md_table(keys: list[OutlineKey]):
     return str_res
 
 
-def create_keys_list_buttons(keys: list[OutlineKey], tg_id, callback_type) -> list[types.InlineKeyboardButton]:
+def create_keys_list_buttons(keys: list[OutlineKey], tg_id, callback_type) -> \
+list[types.InlineKeyboardButton]:
     buttons = []
     for key in keys:
         button = types.InlineKeyboardButton(
@@ -65,7 +66,8 @@ def create_keys_list_buttons(keys: list[OutlineKey], tg_id, callback_type) -> li
     return buttons
 
 
-def create_users_list_buttons(users: list[Users], tg_id) -> list[types.InlineKeyboardButton]:
+def create_users_list_buttons(users: list[Users], tg_id) -> list[
+    types.InlineKeyboardButton]:
     buttons = []
     for user in users:
         button = types.InlineKeyboardButton(

@@ -1,10 +1,12 @@
 from datetime import datetime
 
 from peewee import (DateTimeField, IntegerField, TextField, BooleanField,
-                    ForeignKeyField, AutoField, PostgresqlDatabase, Model, DoesNotExist)
+                    ForeignKeyField, AutoField, PostgresqlDatabase, Model,
+                    DoesNotExist)
 
 from config import (DB_HOST, DB_PORT, POSTGRES_USERNAME, POSTGRES_PASSWORD,
-                    POSTGRES_DATABASE, KEYS_COUNT, IS_MOCK_OUTLINE, RECREATE_DB_ON_START)
+                    POSTGRES_DATABASE, KEYS_COUNT, IS_MOCK_OUTLINE,
+                    RECREATE_DB_ON_START)
 
 db = PostgresqlDatabase(POSTGRES_DATABASE, user=POSTGRES_USERNAME,
                         password=POSTGRES_PASSWORD, host=DB_HOST, port=DB_PORT)
