@@ -71,7 +71,7 @@ def approve_user(user_id):
 
 
 def get_users_for_approve() -> list[Users]:
-    return Users.select().where(Users.is_approved == False)
+    return Users.select().where(Users.is_approved is False)
 
 
 def get_user_keys(tg_id) -> list[Keys]:

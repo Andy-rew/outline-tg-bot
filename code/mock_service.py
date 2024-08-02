@@ -17,7 +17,8 @@ class OutlineMockService:
         if create_in_db:
             for i in range(10):
                 key = OutlineKey(response={'id': str(i), 'name': f'aboba{i}',
-                                           'accessUrl': 'https://www.google.com'},
+                                           'accessUrl': 'https://www.google' +
+                                                        '.com'},
                                  metrics={'bytesTransferredByUserId': {
                                      str(i): 13118344154 + 1000000000 * i}})
 
@@ -29,7 +30,8 @@ class OutlineMockService:
             for db_key in db_keys:
                 key = OutlineKey(response={'id': db_key.key_id,
                                            'name': f'{db_key.key_name}',
-                                           'accessUrl': 'https://www.google.com'},
+                                           'accessUrl': 'https://www.google' +
+                                                        '.com'},
                                  metrics={'bytesTransferredByUserId': {
                                      db_key.key_id: 0}})
 

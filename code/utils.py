@@ -52,7 +52,7 @@ def create_statistic_md_table(keys: list[OutlineKey]):
 
 
 def create_keys_list_buttons(keys: list[OutlineKey], tg_id, callback_type) -> \
-list[types.InlineKeyboardButton]:
+        list[types.InlineKeyboardButton]:
     buttons = []
     for key in keys:
         button = types.InlineKeyboardButton(
@@ -60,22 +60,23 @@ list[types.InlineKeyboardButton]:
             callback_data=f"{callback_type} {tg_id} {key.key_id}")
         buttons.append(button)
 
+    callback_data = f'{callback_type} {tg_id}'
     cancel_button = types.InlineKeyboardButton("Cancel",
-                                               callback_data=f'{callback_type} {tg_id}')
+                                               callback_data=callback_data)
     buttons.append(cancel_button)
     return buttons
 
 
-def create_users_list_buttons(users: list[Users], tg_id) -> list[
-    types.InlineKeyboardButton]:
+def create_users_list_buttons(users: list[Users], tg_id) -> list:
     buttons = []
     for user in users:
+        callback_data = f"{CallbackEnum.approve_user.value} {tg_id} {user.id}"
         button = types.InlineKeyboardButton(
             f"ID: {user.id}, Name: {user.name}",
-            callback_data=f"{CallbackEnum.approve_user.value} {tg_id} {user.id}")
+            callback_data=callback_data)
         buttons.append(button)
-
+    callback_data = f'{CallbackEnum.cancel.value} {tg_id}'
     cancel_button = types.InlineKeyboardButton("Cancel",
-                                               callback_data=f'{CallbackEnum.cancel.value} {tg_id}')
+                                               callback_data=callback_data)
     buttons.append(cancel_button)
     return buttons

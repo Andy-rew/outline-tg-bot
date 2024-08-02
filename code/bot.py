@@ -250,8 +250,10 @@ async def callback_query_handler(call: types.CallbackQuery) -> None:
         delete_status_ok = client.delete_key(data_id)
 
         if delete_status_ok:
-            await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
-                                        text=f'Success deletion\nID: {data_id}')
+            await bot.edit_message_text(chat_id=chat_id,
+                                        message_id=message_id,
+                                        text='Success deletion\n' +
+                                             f'ID: {data_id}')
             await bot.answer_callback_query(call.id, "Done")
         else:
             await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
@@ -270,7 +272,10 @@ async def callback_query_handler(call: types.CallbackQuery) -> None:
             await bot.answer_callback_query(call.id, "Done")
 
             sent_message = await bot.send_message(approved_user.tg_id,
-                                                  f"You are approved by admin and can create {approved_user.keys_count} VPN keys")
+                                                  "You are approved by admin" +
+                                                  "and can create " +
+                                                  f"{approved_user.keys_count}"
+                                                  " VPN keys")
 
             await bot.set_my_commands(user_commands, scope=BotCommandScopeChat(
                 chat_id=sent_message.chat.id))
@@ -300,7 +305,7 @@ async def callback_query_handler(call: types.CallbackQuery) -> None:
                                             "Credentials sent to your DM.")
 
         await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
-                                    text=f'Success')
+                                    text='Success')
 
     elif action == CallbackEnum.cancel.value:
         await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
