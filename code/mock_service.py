@@ -11,10 +11,10 @@ class OutlineMockService:
     all_keys = []
 
     def __init__(self):
-        clear_db()
         create_in_db = IS_MOCK_OUTLINE is True and RECREATE_DB_ON_START is True
 
         if create_in_db:
+            clear_db()
             for i in range(10):
                 key = OutlineKey(response={'id': str(i), 'name': f'aboba{i}', 'accessUrl': 'https://www.google.com'},
                                  metrics={'bytesTransferredByUserId': {str(i): 13118344154 + 1000000000 * i}})
