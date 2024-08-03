@@ -98,8 +98,10 @@ def delete_key(key_id):
 
 def clear_db():
     if IS_MOCK_OUTLINE is True and RECREATE_DB_ON_START is True:
-        Keys.delete().execute()
-        Users.delete().execute()
+        models = [Keys, Users]
+        for model in models:
+            if model.table_exists():
+                model.delete().execute()
 
 
 def get_keys() -> list[Keys]:

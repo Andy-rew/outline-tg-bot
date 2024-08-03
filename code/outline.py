@@ -6,8 +6,7 @@ from mock_service import OutlineMockService
 if IS_MOCK_OUTLINE:
     client = OutlineMockService()
 else:
-    client = OutlineVPN(api_url=API_URL,
-                        cert_sha256=CERT_SHA256)
+    client = OutlineVPN(api_url=API_URL, cert_sha256=CERT_SHA256)
 
 
 def get_outline_client() -> OutlineVPN:
