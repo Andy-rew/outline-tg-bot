@@ -1,7 +1,7 @@
 from outline_vpn.outline_vpn import OutlineVPN
 
-from config import IS_MOCK_OUTLINE, API_URL, CERT_SHA256
-from mock_service import OutlineMockService
+from code.config import IS_MOCK_OUTLINE, API_URL, CERT_SHA256
+from code.mock_service import OutlineMockService
 
 if IS_MOCK_OUTLINE:
     client = OutlineMockService()

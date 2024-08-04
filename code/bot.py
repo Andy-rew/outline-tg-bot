@@ -2,19 +2,18 @@ from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import BotCommand, BotCommandScopeChat
 
-from config import ADMINS, BOT_TOKEN
-from db_models import get_user_by_tg_id
-from exceptions import BotExceptionHandler, AbobaError
-from keys_service import get_admin_key_deletion_buttons, \
+from code.config import ADMINS, BOT_TOKEN
+from code.db_models import get_user_by_tg_id
+from code.exceptions import BotExceptionHandler, AbobaError
+from code.keys_service import get_admin_key_deletion_buttons, \
     get_user_key_deletion_buttons, get_users_for_approve_buttons, \
     create_new_user_key, get_key_info, get_user_key_view_buttons
-from outline import get_outline_client
-from statistic_service import get_statistics_for_admin, get_statistics_for_user
-from user_service import new_user_start, approve_new_user
-from utils import _join_text, _wrap_as_markdown, CallbackEnum
+from code.outline import get_outline_client
+from code.statistic_service import get_statistics_for_admin, get_statistics_for_user
+from code.user_service import new_user_start, approve_new_user
+from code.utils import _join_text, _wrap_as_markdown, CallbackEnum
 
-bot = AsyncTeleBot(BOT_TOKEN,
-                   exception_handler=BotExceptionHandler())
+bot = AsyncTeleBot(BOT_TOKEN, exception_handler=BotExceptionHandler())
 client = get_outline_client()
 
 admin_commands = [
@@ -22,10 +21,8 @@ admin_commands = [
     BotCommand(command='admin_metrics', description='All keys statistic'),
     BotCommand(command='metrics', description='My keys statistic'),
     BotCommand(command='new_key', description='Add new key'),
-    BotCommand(command='get_key',
-               description='Get credentials for existing key'),
-    BotCommand(command='users_for_approve',
-               description='Get users for approve'),
+    BotCommand(command='get_key', description='Get credentials for existing key'),
+    BotCommand(command='users_for_approve', description='Get users for approve'),
     BotCommand(command='admin_delete_key', description='Delete old key'),
     BotCommand(command='delete_key', description='Delete old key'),
     BotCommand(command='help', description='Get help')
@@ -35,8 +32,7 @@ user_commands = [
     BotCommand(command='start', description='Start'),
     BotCommand(command='metrics', description='My keys statistic'),
     BotCommand(command='new_key', description='Add new key'),
-    BotCommand(command='get_key',
-               description='Get credentials for existing key'),
+    BotCommand(command='get_key', description='Get credentials for existing key'),
     BotCommand(command='delete_key', description='Delete old key'),
     BotCommand(command='help', description='Get help')
 ]
@@ -208,11 +204,7 @@ async def get_users_for_approve_handler(message: types.Message) -> None:
     await bot.send_message(message.chat.id, "Choose user for approve", reply_markup=markup)
 
 
-def query_callback(call: types.CallbackQuery) -> bool:
-    return True
-
-
-@bot.callback_query_handler(func=query_callback)
+@bot.callback_query_handler(func=lambda call: True)
 async def callback_query_handler(call: types.CallbackQuery) -> None:
     """
     Handle pressing button for action on key
@@ -256,7 +248,7 @@ async def callback_query_handler(call: types.CallbackQuery) -> None:
             await bot.answer_callback_query(call.id, "Done")
 
             sent_message = await bot.send_message(approved_user.tg_id,
-                                                  "You are approved by admin and can create" +
+                                                  "You are approved by admin and can create " +
                                                   f"{approved_user.keys_count} VPN keys")
 
             await bot.set_my_commands(user_commands, scope=BotCommandScopeChat(chat_id=sent_message.chat.id))

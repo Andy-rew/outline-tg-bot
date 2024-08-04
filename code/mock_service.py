@@ -2,9 +2,9 @@ import random
 
 from outline_vpn.outline_vpn import OutlineKey
 
-from config import IS_MOCK_OUTLINE, RECREATE_DB_ON_START
-from db_models import create_new_user_on_start, clear_db, get_keys
-from exceptions import OutlineServerErrorException
+from code.config import IS_MOCK_OUTLINE, RECREATE_DB_ON_START
+from code.db_models import create_new_user_on_start, clear_db, get_keys
+from code.exceptions import OutlineServerErrorException
 
 
 class OutlineMockService:

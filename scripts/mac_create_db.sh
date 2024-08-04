@@ -5,7 +5,7 @@ brew update
 brew doctor
 brew install postgresql
 
-# run postgresql
+# start postgresql
 brew services start postgresql
 
 # stop postgresql

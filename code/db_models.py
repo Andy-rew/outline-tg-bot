@@ -4,9 +4,9 @@ from peewee import (DateTimeField, IntegerField, TextField, BooleanField,
                     ForeignKeyField, AutoField, PostgresqlDatabase, Model,
                     DoesNotExist)
 
-from config import (DB_HOST, DB_PORT, POSTGRES_USERNAME, POSTGRES_PASSWORD,
-                    POSTGRES_DATABASE, KEYS_COUNT, IS_MOCK_OUTLINE,
-                    RECREATE_DB_ON_START)
+from code.config import (DB_HOST, DB_PORT, POSTGRES_USERNAME, POSTGRES_PASSWORD,
+                         POSTGRES_DATABASE, KEYS_COUNT, IS_MOCK_OUTLINE,
+                         RECREATE_DB_ON_START)
 
 db = PostgresqlDatabase(POSTGRES_DATABASE, user=POSTGRES_USERNAME,
                         password=POSTGRES_PASSWORD, host=DB_HOST, port=DB_PORT)
@@ -71,7 +71,7 @@ def approve_user(user_id):
 
 
 def get_users_for_approve() -> list[Users]:
-    return Users.select().where(Users.is_approved is False)
+    return Users.select().where(~Users.is_approved)
 
 
 def get_user_keys(tg_id) -> list[Keys]:
