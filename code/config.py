@@ -7,7 +7,9 @@ config = dotenv_values(".env")
 if not config:
     config = os.environ
 
-BOT_TOKEN: str = config.get('BOT_TOKEN')
+ADMIN_BOT_TOKEN: str = config.get('ADMIN_BOT_TOKEN')
+USER_BOT_TOKEN: str = config.get('USER_BOT_TOKEN')
+GROUP_BOT_TOKEN: str = config.get('GROUP_BOT_TOKEN')
 API_URL: str = config.get('API_URL')
 CERT_SHA256: str = config.get('CERT_SHA256')
 ADMINS: [str] = config.get('ADMINS').split(',')
