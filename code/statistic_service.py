@@ -1,8 +1,7 @@
 from code.outline import get_outline_client
 from code.user_service import filter_user_keys
 from code.utils import create_statistic_md_table
-
-client = get_outline_client()
+from run import client
 
 
 def get_statistics_for_admin():
