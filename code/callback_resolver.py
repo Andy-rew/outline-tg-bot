@@ -5,9 +5,11 @@ from telebot.types import BotCommandScopeChat
 from code.config_commands import user_commands
 from code.exceptions import AbobaError
 from code.keys_service import get_key_info
+from code.outline import get_outline_client
 from code.user_service import approve_new_user
 from code.utils import CallbackEnum, _join_text, _wrap_as_markdown
-from run import client
+
+client = get_outline_client()
 
 
 async def resolve_callback(bot: AsyncTeleBot, call: types.CallbackQuery):
