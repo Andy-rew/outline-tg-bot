@@ -1,6 +1,6 @@
-from outline import get_outline_client
-from user_service import filter_user_keys
-from utils import create_statistic_md_table
+from code.outline import get_outline_client
+from code.user_service import filter_user_keys
+from code.utils import create_statistic_md_table
 
 client = get_outline_client()
 

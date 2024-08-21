@@ -1,8 +1,8 @@
 from outline_vpn.outline_vpn import OutlineKey
 
-from db_models import create_new_user_on_start, get_user_keys, approve_user, \
-    get_user_by_id, get_user_by_tg_id, Users
-from exceptions import AbobaError
+from code.db_models import create_new_user_on_start, get_user_keys, approve_user, get_user_by_id, get_user_by_tg_id, \
+    Users
+from code.exceptions import AbobaError
 
 
 def filter_user_keys(keys: list[OutlineKey], tg_id):

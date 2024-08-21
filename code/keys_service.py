@@ -1,12 +1,11 @@
 from outline_vpn.outline_vpn import OutlineKey
 from telebot import types
 
-from db_models import get_users_for_approve, create_new_key, get_user_by_tg_id
-from exceptions import AbobaError, OutlineServerErrorException
-from outline import get_outline_client
-from user_service import filter_user_keys
-from utils import create_keys_list_buttons, create_users_list_buttons, \
-    CallbackEnum
+from code.db_models import get_users_for_approve, create_new_key, get_user_by_tg_id
+from code.exceptions import AbobaError, OutlineServerErrorException
+from code.outline import get_outline_client
+from code.user_service import filter_user_keys
+from code.utils import create_keys_list_buttons, create_users_list_buttons, CallbackEnum
 
 client = get_outline_client()
 

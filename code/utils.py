@@ -4,13 +4,13 @@ import pandas as pd
 from outline_vpn.outline_vpn import OutlineKey
 from telebot import types
 
-from db_models import Users
+from code.db_models import Users
 
 
 class CallbackEnum(Enum):
     delete_key = 'delete_key'
     approve_user = 'approve_user'
-    cancel = 'cancel',
+    cancel = 'cancel'
     view_key = 'view_key'
 
 
@@ -56,7 +56,7 @@ def create_keys_list_buttons(keys: list[OutlineKey], tg_id, callback_type) -> li
                                             callback_data=f"{callback_type} {tg_id} {key.key_id}")
         buttons.append(button)
 
-    cancel_button = types.InlineKeyboardButton("Cancel", callback_data=f'{callback_type} {tg_id}')
+    cancel_button = types.InlineKeyboardButton("Cancel", callback_data=f'{CallbackEnum.cancel.value} {tg_id}')
     buttons.append(cancel_button)
     return buttons
 
